@@ -5,7 +5,10 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon index.js"
+    "start-docker": "cd mongodb && docker-compose up -d",
+    "start-server": "nodemon index.js",
+    "start-client": "cd client && yarn vite",
+    "dev": "concurrently \"yarn start-docker\" \"yarn start-server\" \"yarn start-client\""
   },
   "author": "Oleg Razin",
   "license": "ISC",
