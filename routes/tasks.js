@@ -1,18 +1,7 @@
 const express = require("express");
-const db = require("../db/conn.js");
 const router = express.Router();
+const Task = require("../models/Tasks");
 
-const taskSchema = new db.Schema({
-    title: String,
-    description: String,
-    date: Date,
-    deadline: Date,
-    completed: Boolean
-});
-
-const Task = db.model('Task', taskSchema);
-
-// Get a list of 50 posts
 router.get("/", async (req, res) => {
     try {
         const tasks = await Task.find();
