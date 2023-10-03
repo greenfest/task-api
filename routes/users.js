@@ -17,20 +17,20 @@ const auth = {
     required: jwt({
         secret: 'secret',
         algorithms: ["HS256"],
-        userProperty: 'payload',
+        // userProperty: 'payload',
         // getToken: getTokenFromHeaders,
     }),
     optional: jwt({
         secret: 'secret',
         algorithms: ["HS256"],
-        userProperty: 'payload',
+        // userProperty: 'payload',
         // getToken: getTokenFromHeaders,
         credentialsRequired: false,
     }),
 };
 
 //POST new user route (optional, everyone has access)
-router.post('/', auth.optional, (req, res, next) => {
+router.post('/', auth.optional, async (req, res, next) => {
     const { body: { user } } = req;
 
     if(!user.email) {
@@ -45,6 +45,17 @@ router.post('/', auth.optional, (req, res, next) => {
         return res.status(422).json({
             errors: {
                 password: 'is required',
+            },
+        });
+    }
+
+    let query = {email: user.email};
+    const existUser  = await Users.findOne(query);
+
+    if (existUser) {
+        return res.status(409).json({
+            errors: {
+                email: '"Account already exists"',
             },
         });
     }
@@ -93,18 +104,9 @@ router.post('/login', auth.optional, (req, res, next) => {
     })(req, res, next);
 });
 
-//GET current route (required, only authenticated users have access)
-router.get('/current', auth.required, (req, res, next) => {
-    const { payload: { id } } = req;
-
-    return Users.findById(id)
-        .then((user) => {
-            if(!user) {
-                return res.sendStatus(400);
-            }
-
-            return res.json({ user: user.toAuthJSON() });
-        });
+//GET Test (required, only authenticated users have access)
+router.get('/test', auth.required, (req, res, next) => {
+    return res.json({message: "Welcome"})
 });
 
 

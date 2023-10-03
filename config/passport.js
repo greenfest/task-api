@@ -1,4 +1,3 @@
-const mongoose = require('../db/conn');
 const passport = require('passport');
 const LocalStrategy = require('passport-local');
 const Users = require('../models/Users');
@@ -22,8 +21,8 @@ passport.use(
     'login',
     new LocalStrategy(
         {
-            usernameField: 'email',
-            passwordField: 'password'
+            usernameField: 'user[email]',
+            passwordField: 'user[password]'
         },
         async (email, password, done) => {
             try {
