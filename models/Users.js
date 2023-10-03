@@ -5,9 +5,21 @@ const jwt = require('jsonwebtoken');
 const { Schema } = db;
 
 const UsersSchema = new Schema({
-    email: String,
-    hash: String,
-    salt: String,
+    email: {
+        type: String,
+        required: true,
+        unique: true
+    },
+    hash: {
+        type: String,
+        required: true,
+        unique: true
+    },
+    salt: {
+        type: String,
+        required: true,
+        unique: true
+    },
 });
 
 UsersSchema.methods.setPassword = function(password) {

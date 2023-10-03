@@ -77,7 +77,7 @@ router.post('/login', auth.optional, (req, res, next) => {
         });
     }
 
-    return passport.authenticate('local', { session: false }, (err, passportUser, info) => {
+    return passport.authenticate('login', { session: false }, (err, passportUser, info) => {
         if(err) {
             return next(err);
         }
@@ -89,7 +89,7 @@ router.post('/login', auth.optional, (req, res, next) => {
             return res.json({ user: user.toAuthJSON() });
         }
 
-        return status(400).info;
+        return res.status(400).json({ errors: { info } });
     })(req, res, next);
 });
 
