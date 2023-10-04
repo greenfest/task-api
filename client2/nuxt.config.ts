@@ -5,10 +5,16 @@ const { resolve } = createResolver(import.meta.url);
 
 export default defineNuxtConfig({
     experimental:{
-        inlineSSRStyles: false
+        inlineSSRStyles: false,
     },
 
-    ssr: true,
+    server: {
+      host: "127.0.0.1"
+    },
+
+    cache: true,
+
+    // ssr: true,
     routeRules: {
         '/**': { ssr: false }
     },
@@ -22,25 +28,19 @@ export default defineNuxtConfig({
                 "UTask",
         },
     },
-  modules: ["@nuxtjs/tailwindcss", "nuxt-headlessui", "@pinia/nuxt"],
-    nitro: {
-        serveStatic: true,
-    },
+  modules: ["@pinia/nuxt"],
+    // nitro: {
+    //     serveStatic: true,
+    // },
     sourcemap: { server: false, client: false },
     devServerHandlers: [],
-    postcss: {
-        plugins: {
-            tailwindcss: {},
-            autoprefixer: {},
-        },
-    },
-  hooks: {
-    "vite:extendConfig": (config: any) => {
-      config.plugins.push(
-          vuetify({
-            styles: { configFile: resolve("/assets/scss/variables.scss") },
-          })
-      );
-    },
-  },
+  // hooks: {
+  //   "vite:extendConfig": (config: any) => {
+  //     config.plugins.push(
+  //         vuetify({
+  //           styles: { configFile: resolve("@/assets/scss/variables.scss") },
+  //         })
+  //     );
+  //   },
+  // },
 })
