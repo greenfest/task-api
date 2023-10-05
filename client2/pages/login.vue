@@ -2,6 +2,28 @@
 definePageMeta({
   layout: "blank" ,
 });
+
+
+import { storeToRefs } from 'pinia'; // import storeToRefs helper hook from pinia
+import { useAuthStore } from '~/store/auth'; // import the auth store we just created
+
+const { authenticateUser } = useAuthStore(); // use authenticateUser action from  auth store
+
+const { authenticated } = storeToRefs(useAuthStore()); // make authenticated state reactive with storeToRefs
+
+const user = ref({
+  email: '',
+  password: '',
+});
+const router = useRouter();
+
+const login = async () => {
+  await authenticateUser(user.value); // call authenticateUser and pass the user object
+  if (authenticated) {
+    await router.push('/dashboard');
+  }
+};
+
 </script>
 
 <template>
@@ -25,6 +47,7 @@ definePageMeta({
           placeholder="Email address"
           prepend-inner-icon="mdi-email-outline"
           variant="outlined"
+          v-model="user.email"
       ></v-text-field>
 
       <div class="text-subtitle-1 text-medium-emphasis d-flex align-center justify-space-between">
@@ -47,6 +70,8 @@ definePageMeta({
           prepend-inner-icon="mdi-lock-outline"
           variant="outlined"
           @click:append-inner="visible = !visible"
+          v-model="user.password"
+
       ></v-text-field>
 
       <v-card
@@ -65,6 +90,7 @@ definePageMeta({
           color="blue"
           size="large"
           variant="tonal"
+          @click="login"
       >
         Log In
       </v-btn>

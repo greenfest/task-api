@@ -22,18 +22,12 @@ export default defineNuxtConfig({
                 "UTask",
         },
     },
-  modules: ["@nuxtjs/tailwindcss", "nuxt-headlessui", "@pinia/nuxt"],
+  modules: ["nuxt-headlessui", "@pinia/nuxt"],
     nitro: {
         serveStatic: true,
     },
     sourcemap: { server: false, client: false },
     devServerHandlers: [],
-    postcss: {
-        plugins: {
-            tailwindcss: {},
-            autoprefixer: {},
-        },
-    },
   hooks: {
     "vite:extendConfig": (config: any) => {
       config.plugins.push(

@@ -1,4 +1,7 @@
 <script setup>
+import { storeToRefs } from 'pinia';
+import { useAuthStore } from '~/store/auth';
+
 const userprofile = ref([
   {
     title: "My Profile",
@@ -13,6 +16,17 @@ const userprofile = ref([
     desc: "To-do and Daily Tasks",
   },
 ]);
+
+const router = useRouter();
+
+const { logUserOut } = useAuthStore();
+const { authenticated } = storeToRefs(useAuthStore());
+
+const logout = () => {
+  logUserOut();
+  router.push('/login');
+};
+
 </script>
 
 <template>
@@ -29,7 +43,7 @@ const userprofile = ref([
         <v-list-item class="py-2  mb-2" v-for="(item, i) in userprofile" :key="i" :value="item" :title="item.title"
           :subtitle="item.desc" rounded="md">
         </v-list-item>
-        <v-btn block color="primary" class="mt-4 py-4">Logout</v-btn>
+        <v-btn block color="primary" class="mt-4 py-4" @click="logout">Logout</v-btn>
       </v-list>
     </v-sheet>
   </v-menu>

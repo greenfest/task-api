@@ -5,6 +5,11 @@ import BlogCard from "@/components/dashboard/BlogCard.vue";
 import TheProfileCard from '@/components/dashboard/TheProfileCard.vue';
 import TheMyContacts from '@/components/dashboard/TheMyContacts.vue';
 import TheActivityTimeline from '@/components/dashboard/TheActivityTimeline.vue'
+
+definePageMeta({
+  middleware: "auth",
+});
+
 </script>
 
 
