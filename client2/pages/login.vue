@@ -8,19 +8,58 @@ import { storeToRefs } from 'pinia'; // import storeToRefs helper hook from pini
 import { useAuthStore } from '~/store/auth'; // import the auth store we just created
 
 const { authenticateUser } = useAuthStore(); // use authenticateUser action from  auth store
-
 const { authenticated } = storeToRefs(useAuthStore()); // make authenticated state reactive with storeToRefs
+
+const visiblePassword = ref(false);
+const isEmailValid = ref(false);
+const isPasswordValid = ref(false);
+const isValid = ref(false);
 
 const user = ref({
   email: '',
   password: '',
 });
+
+const emailRules = [
+  v => !!v || 'Email is required',
+  v => /.+@.+\..+/.test(v) || 'Invalid Email address',
+];
+
+const passwordRules = [
+  v => !!v || 'Password is required',
+];
+
+const checkEmailFormat = () => {
+  isEmailValid.value = /.+@.+\..+/.test(user.value.email);
+  updateFormValidity();
+};
+
+const checkPasswordFormat = () => {
+  isPasswordValid.value = user.value.password.trim() !== '';
+  updateFormValidity();
+};
+
+const updateFormValidity = () => {
+  isValid.value = isEmailValid.value && isPasswordValid.value;
+};
+
+let incorrectAuth = ref(false);
+
 const router = useRouter();
 
+
 const login = async () => {
-  await authenticateUser(user.value); // call authenticateUser and pass the user object
+  const error = await authenticateUser(user.value);
+  if (error) {
+    incorrectAuth.value = true;
+    console.log(error);
+    return;
+  }
+
   if (authenticated) {
     await router.push('/dashboard');
+  } else {
+    incorrectAuth.value = true;
   }
 };
 
@@ -48,6 +87,8 @@ const login = async () => {
           prepend-inner-icon="mdi-email-outline"
           variant="outlined"
           v-model="user.email"
+          @input="checkEmailFormat"
+          :rules="emailRules"
       ></v-text-field>
 
       <div class="text-subtitle-1 text-medium-emphasis d-flex align-center justify-space-between">
@@ -63,15 +104,16 @@ const login = async () => {
       </div>
 
       <v-text-field
-          :append-inner-icon="visible ? 'mdi-eye-off' : 'mdi-eye'"
-          :type="visible ? 'text' : 'password'"
+          :append-inner-icon="visiblePassword ? 'mdi-eye-off' : 'mdi-eye'"
+          :type="visiblePassword ? 'text' : 'password'"
           density="compact"
           placeholder="Enter your password"
           prepend-inner-icon="mdi-lock-outline"
           variant="outlined"
-          @click:append-inner="visible = !visible"
+          @click:append-inner="visiblePassword = !visiblePassword"
           v-model="user.password"
-
+          @input="checkPasswordFormat"
+          :rules="passwordRules"
       ></v-text-field>
 
       <v-card
@@ -91,6 +133,7 @@ const login = async () => {
           size="large"
           variant="tonal"
           @click="login"
+          :disabled="!isValid"
       >
         Log In
       </v-btn>
@@ -105,6 +148,16 @@ const login = async () => {
           Sign up now <v-icon icon="mdi-chevron-right"></v-icon>
         </a>
       </v-card-text>
+
+      <v-alert
+          v-if="incorrectAuth"
+          class="mb-3"
+          color="error"
+          variant="tonal"
+          type="error"
+          text="The email address or password you entered is incorrect."
+      ></v-alert>
+
     </v-card>
   </div>
 </template>
