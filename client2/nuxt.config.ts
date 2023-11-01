@@ -22,7 +22,7 @@ export default defineNuxtConfig({
                 "UTask",
         },
     },
-  modules: ["nuxt-headlessui", "@pinia/nuxt"],
+  modules: ["@pinia/nuxt"],
     nitro: {
         serveStatic: true,
     },

@@ -10,7 +10,6 @@
     "postinstall": "nuxt prepare"
   },
   "devDependencies": {
-    "@tailwindcss/forms": "^0.5.6",
     "autoprefixer": "^10.4.16",
     "nuxt": "^3.7.4",
     "postcss": "^8.4.31",
@@ -34,6 +33,7 @@
     "vue-style-loader": "4.1.3",
     "vue-tabler-icons": "2.9.0",
     "vue3-apexcharts": "1.4.1",
+    "vue3-dragula": "^1.0.0",
     "vue3-perfect-scrollbar": "1.6.0",
     "vuetify": "3.3.19",
     "yup": "0.32.11"
