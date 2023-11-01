@@ -29,7 +29,7 @@ const sidebarItem: menu[] = [
   {
     title: "Dashboard",
     icon: LayoutDashboardIcon,
-    to: "/",
+    to: "/dashboard",
   },
   {
     title: "Tasks",
