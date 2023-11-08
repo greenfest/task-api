@@ -1,14 +1,13 @@
 <script setup lang="ts">
-  // const { data: tasks } = await useFetch('http://localhost:4000/tasks');
-  const { pending, data: tasks } = useFetch('http://localhost:4000/tasks', {
-    lazy: true,
+
+  const { pending, data: tasks } = await useFetch('http://localhost:4000/tasks', {
     server: false
   })
-  console.log(tasks)
-  // function toggleTask(taskId: String) {
-  //   const task = tasks.value.filter(task => task.id === taskId);
-  //   console.log(task);
-  // }
+
+  const uncompletedTasks = tasks.value.filter(task => !task.completed);
+  const completedTasks = tasks.value.filter(task => task.completed);
+
+
 </script>
 
 <template>
@@ -16,7 +15,7 @@
     <v-list-subheader>Uncompleted tasks</v-list-subheader>
 
     <v-list-item
-        v-for="task in tasks"
+        v-for="task in uncompletedTasks"
         :key="task.id"
         :title="task.title"
     >
@@ -42,7 +41,7 @@
     <v-list-subheader>Completed tasks</v-list-subheader>
 
     <v-list-item
-        v-for="task in tasks"
+        v-for="task in completedTasks"
         :key="task.title"
         :title="task.title"
         class="flex align-content-center"
