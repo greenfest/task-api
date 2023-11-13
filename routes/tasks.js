@@ -5,7 +5,10 @@ const Task = require("../models/Tasks");
 router.get("/", async (req, res) => {
     try {
         const tasks = await Task.find();
-        res.json(tasks);
+        res.json({
+            "completed": tasks.filter(task => task.completed === true),
+            "uncompleted": tasks.filter(task => task.completed === false)
+        });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

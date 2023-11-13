@@ -1,12 +1,49 @@
 <script setup lang="ts">
 
-  const { pending, data: tasks } = await useFetch('http://localhost:4000/tasks', {
-    server: false
-  })
+  const response = await fetch('http://localhost:4000/tasks')
+  const tasks = await response.json();
 
-  const uncompletedTasks = tasks.value.filter(task => !task.completed);
-  const completedTasks = tasks.value.filter(task => task.completed);
+  const uncompletedTasks = ref(tasks.uncompleted);
+  const completedTasks = ref(tasks.completed);
+  async function toggleTask(taskId: String, isCompleted: Boolean) {
+    try {
+      const response = await fetch(`http://localhost:4000/tasks/${taskId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          completed: !isCompleted,
+        }),
+      });
 
+      // Ожидаем завершения запроса перед обновлением данных
+      await response.json();
+
+      // Обновление данных после успешного запроса
+      updateTaskStatusLocally(taskId, !isCompleted);
+    } catch (error) {
+      console.error('Error updating task status', error);
+    }
+  }
+
+  function updateTaskStatusLocally(taskId: string, isCompleted: boolean) {
+    const taskToUpdate = uncompletedTasks.value.find(task => task._id === taskId) ||
+        completedTasks.value.find(task => task._id === taskId);
+
+    if (taskToUpdate) {
+      taskToUpdate.completed = isCompleted;
+
+      // Обновляем массивы в зависимости от статуса задачи
+      if (isCompleted) {
+        completedTasks.value.push(taskToUpdate);
+        uncompletedTasks.value = uncompletedTasks.value.filter(task => task._id !== taskId);
+      } else {
+        uncompletedTasks.value.push(taskToUpdate);
+        completedTasks.value = completedTasks.value.filter(task => task._id !== taskId);
+      }
+    }
+  }
 
 </script>
 
@@ -16,12 +53,12 @@
 
     <v-list-item
         v-for="task in uncompletedTasks"
-        :key="task.id"
+        :key="task._id"
         :title="task.title"
     >
       <template v-slot:prepend>
         <v-checkbox
-            @click="toggleTask(task.id)"
+            @click="toggleTask(task._id, task.completed)"
             color="primary"
             hide-details
         ></v-checkbox>
@@ -42,12 +79,22 @@
 
     <v-list-item
         v-for="task in completedTasks"
-        :key="task.title"
-        :title="task.title"
+        :key="task._id"
         class="flex align-content-center"
     >
+      <template v-slot:default>
+        <v-list-item-content>
+          <v-list-item-title
+              v-text="task.title"
+              :class="{ 'text-decoration-line-through': task.completed }"
+          ></v-list-item-title>
+        </v-list-item-content>
+      </template>
+
       <template v-slot:prepend>
         <v-checkbox
+            v-model="task.completed"
+            @click="toggleTask(task._id, task.completed)"
             color="primary"
             hide-details
         ></v-checkbox>
@@ -64,8 +111,8 @@
   </v-list>
 </template>
 
-
-
-<style scoped>
-
+<style>
+.text-decoration-line-through {
+  text-decoration: line-through;
+}
 </style>
