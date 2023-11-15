@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start-docker": "cd mongodb && docker-compose up -d",
     "start-server": "nodemon index.js",
-    "start-client": "cd client2 && yarn dev",
+    "start-client": "cd client && yarn dev",
     "dev": "concurrently \"yarn start-docker\" \"yarn start-server\" \"yarn start-client\""
   },
   "author": "Oleg Razin",
