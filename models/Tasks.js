@@ -5,6 +5,7 @@ const taskSchema = new db.Schema({
     description: String,
     date: Date,
     deadline: Date,
+    userId: String,
     completed: Boolean
 });
 

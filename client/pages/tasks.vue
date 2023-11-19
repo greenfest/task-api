@@ -1,16 +1,24 @@
 <script setup lang="ts">
+  const token = useCookie('token');
 
-  const response = await fetch('http://localhost:4000/tasks')
+  const response = await fetch('http://localhost:4000/tasks', {
+    method: "GET",
+    headers: {
+      "Authorization": token ? "Bearer " + token._value : "",
+    },
+  });
   const tasks = await response.json();
 
   const uncompletedTasks = ref(tasks.uncompleted);
   const completedTasks = ref(tasks.completed);
+
   async function toggleTask(taskId: String, isCompleted: Boolean) {
     try {
       const response = await fetch(`http://localhost:4000/tasks/${taskId}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": token ? "Bearer " + token._value : "",
         },
         body: JSON.stringify({
           completed: !isCompleted,

@@ -1,10 +1,28 @@
 const express = require("express");
 const router = express.Router();
 const Task = require("../models/Tasks");
+const { expressjwt: jwt } = require('express-jwt');
 
-router.get("/", async (req, res) => {
+
+const auth = {
+    required: jwt({
+        secret: 'secret',
+        algorithms: ["HS256"],
+        credentialsRequired: true,
+        requestProperty: 'auth',
+    }),
+    optional: jwt({
+        secret: 'secret',
+        algorithms: ["HS256"],
+        credentialsRequired: false,
+    }),
+};
+
+
+router.get("/", auth.required, async (req, res) => {
+    const userId = req.auth.id ? req.auth.id : "";
     try {
-        const tasks = await Task.find();
+        const tasks = await Task.find({ userId });
         res.json({
             "completed": tasks.filter(task => task.completed === true),
             "uncompleted": tasks.filter(task => task.completed === false)
@@ -14,7 +32,7 @@ router.get("/", async (req, res) => {
     }
 });
 
-router.get("/:id", async (req, res) => {
+router.get("/:id", auth.required, async (req, res) => {
     let query = {_id: req.params.id};
     let result = await Task.findOne(query);
 
@@ -23,11 +41,13 @@ router.get("/:id", async (req, res) => {
 });
 
 
-router.post("/", async (req, res) => {
+router.post("/", auth.required, async (req, res) => {
+    const userId = req.auth.id ? req.auth.id : "";
     const task = new Task({
         title: req.body.title,
         description: req.body.description,
         date: new Date(),
+        userId: userId,
         deadline: new Date(2023,9,10,17,0,0),
         completed: false
     });
@@ -40,7 +60,7 @@ router.post("/", async (req, res) => {
     }
 });
 
-router.patch("/:id", async (req, res) => {
+router.patch("/:id", auth.required, async (req, res) => {
     const query = { _id: req.params.id };
     const updates = {
         title: req.body.title,
@@ -59,7 +79,7 @@ router.patch("/:id", async (req, res) => {
     }
 });
 
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", auth.required, async (req, res) => {
     const query = { _id: req.params.id };
     try {
         const result = await Task.deleteOne(query);
