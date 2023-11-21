@@ -53,10 +53,40 @@
     }
   }
 
+  const dialog = false;
+
 </script>
 
 <template>
-  <v-list lines="one">
+
+  <v-col cols="auto">
+    <v-btn size="small"> <v-icon icon="mdi-plus"></v-icon>Add task</v-btn>
+  </v-col>
+
+  <v-btn
+      color="primary"
+  >
+    Open Dialog
+
+    <v-dialog
+        v-model="dialog"
+        activator="parent"
+        width="auto"
+    >
+      <v-card>
+        <v-card-text>
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+        </v-card-text>
+        <v-card-actions>
+          <v-btn color="primary" block @click="dialog = false">Close Dialog</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+  </v-btn>
+
+
+
+  <v-list lines="one" class="rounded">
     <v-list-subheader>Uncompleted tasks</v-list-subheader>
 
     <v-list-item
@@ -82,7 +112,7 @@
     </v-list-item>
   </v-list>
 
-  <v-list lines="one">
+  <v-list lines="one" class="rounded">
     <v-list-subheader>Completed tasks</v-list-subheader>
 
     <v-list-item
