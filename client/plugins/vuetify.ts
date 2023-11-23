@@ -47,10 +47,11 @@ export default defineNuxtPlugin((nuxtApp) => {
       VTooltip: {
         location: "top",
       },
-      VList: {
-      },
-      VCheckbox: {
-      },
+      VList: {},
+      VCheckbox: {},
+      VDialog: {},
+      VForm: {},
+      VSheet: {},
     },
   });
   nuxtApp.vueApp.use(vuetify);

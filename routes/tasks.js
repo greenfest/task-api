@@ -48,7 +48,7 @@ router.post("/", auth.required, async (req, res) => {
         description: req.body.description,
         date: new Date(),
         userId: userId,
-        deadline: new Date(2023,9,10,17,0,0),
+        deadline: new Date(req.body.deadline),
         completed: false
     });
 

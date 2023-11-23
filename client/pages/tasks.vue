@@ -1,5 +1,7 @@
 <script setup lang="ts">
   const token = useCookie('token');
+  let isError = false;
+  let isSuccess = false;
 
   const response = await fetch('http://localhost:4000/tasks', {
     method: "GET",
@@ -25,10 +27,8 @@
         }),
       });
 
-      // Ожидаем завершения запроса перед обновлением данных
       await response.json();
 
-      // Обновление данных после успешного запроса
       updateTaskStatusLocally(taskId, !isCompleted);
     } catch (error) {
       console.error('Error updating task status', error);
@@ -53,36 +53,99 @@
     }
   }
 
-  const dialog = false;
+  const newTask = ref({
+    title: null,
+    description: null,
+    date: new Date,
+    deadline: null,
+    completed: false,
+  });
+
+  async function createTask() {
+    console.log(newTask._value);
+    try {
+      const response = await fetch(`http://localhost:4000/tasks/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": token ? "Bearer " + token._value : "",
+        },
+        body: JSON.stringify(newTask._value),
+      });
+
+      const task = await response.json();
+      uncompletedTasks.value .push(task);
+      isSuccess = true;
+    } catch (error) {
+      console.error('Error creating a new task', error);
+      isError = true;
+    }
+
+  }
 
 </script>
 
 <template>
 
-  <v-col cols="auto">
-    <v-btn size="small"> <v-icon icon="mdi-plus"></v-icon>Add task</v-btn>
-  </v-col>
-
-  <v-btn
-      color="primary"
+  <v-dialog
+      transition="dialog-top-transition"
+      width="auto"
   >
-    Open Dialog
-
-    <v-dialog
-        v-model="dialog"
-        activator="parent"
-        width="auto"
-    >
+    <template v-slot:activator="{ props }">
+      <v-btn v-bind="props" class="mb-3"><v-icon icon="mdi-plus"></v-icon>Add task</v-btn>
+    </template>
+    <template v-slot:default="{ isActive }">
       <v-card>
+        <v-toolbar
+            color="primary"
+            title="Add a task"
+        ></v-toolbar>
         <v-card-text>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+          <v-sheet width="300" class="mx-auto">
+            <v-form fast-fail @submit.prevent>
+              <v-text-field
+                  v-model="newTask.title"
+                  label="Title"
+              ></v-text-field>
+              <v-text-field
+                  v-model="newTask.description"
+                  label="Description"
+              ></v-text-field>
+              <v-text-field
+                  v-model="newTask.deadline"
+                  label="Deadline"
+                  type="date"
+              ></v-text-field>
+
+              <v-btn type="submit" color="primary" block class="mt-2" @click="createTask">Submit</v-btn>
+              <v-alert
+                  v-if="isError"
+                  class="mb-3"
+                  color="error"
+                  variant="tonal"
+                  type="error"
+                  text="The email address or password you entered is incorrect."
+              ></v-alert>
+              <v-alert
+                  v-if="isSuccess"
+                  class="mb-3"
+                  color="success"
+                  variant="tonal"
+                  type="success"
+                  text="A new task was added"
+              ></v-alert>
+            </v-form>
+          </v-sheet>
         </v-card-text>
-        <v-card-actions>
-          <v-btn color="primary" block @click="dialog = false">Close Dialog</v-btn>
+        <v-card-actions class="justify-end">
+          <v-btn
+              variant="text"
+              @click="isActive.value = false; isError = false; isSuccess = false"
+          >Close</v-btn>
         </v-card-actions>
       </v-card>
-    </v-dialog>
-  </v-btn>
+    </template>
+  </v-dialog>
 
 
 
@@ -101,11 +164,16 @@
             hide-details
         ></v-checkbox>
       </template>
-
+      <p></p>
       <template v-slot:append>
         <v-btn
             color="grey-lighten-1"
-            icon="mdi-information"
+            icon="mdi-pencil"
+            variant="text"
+        ></v-btn>
+        <v-btn
+            color="grey-lighten-1"
+            icon="mdi-delete"
             variant="text"
         ></v-btn>
       </template>
@@ -121,12 +189,10 @@
         class="flex align-content-center"
     >
       <template v-slot:default>
-        <v-list-item-content>
           <v-list-item-title
               v-text="task.title"
               :class="{ 'text-decoration-line-through': task.completed }"
           ></v-list-item-title>
-        </v-list-item-content>
       </template>
 
       <template v-slot:prepend>
@@ -152,5 +218,9 @@
 <style>
 .text-decoration-line-through {
   text-decoration: line-through;
+}
+
+.date-picker {
+  width: 100%;
 }
 </style>
