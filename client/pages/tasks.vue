@@ -1,4 +1,8 @@
 <script setup lang="ts">
+  import { format, parseISO } from 'date-fns';
+  import { utcToZonedTime } from 'date-fns-tz';
+
+
   const token = useCookie('token');
   let isError = false;
   let isSuccess = false;
@@ -62,15 +66,17 @@
   });
 
   async function createTask() {
-    console.log(newTask._value);
     try {
+      const taskObj = {...newTask._value};
+      taskObj.deadline = new Date(taskObj.deadline);
+      console.log(taskObj);
       const response = await fetch(`http://localhost:4000/tasks/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "Authorization": token ? "Bearer " + token._value : "",
         },
-        body: JSON.stringify(newTask._value),
+        body: JSON.stringify(taskObj),
       });
 
       const task = await response.json();
@@ -81,6 +87,16 @@
       isError = true;
     }
 
+  }
+
+  function formatDateTimeToLocal(dateTimeString) {
+    const utcDateTime = parseISO(dateTimeString);
+    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const zonedDateTime = utcToZonedTime(utcDateTime, timeZone);
+
+    const formattedDateTime = format(zonedDateTime, 'dd.MM.yyyy HH:mm', { timeZone });
+
+    return formattedDateTime;
   }
 
 </script>
@@ -114,7 +130,7 @@
               <v-text-field
                   v-model="newTask.deadline"
                   label="Deadline"
-                  type="date"
+                  type="datetime-local"
               ></v-text-field>
 
               <v-btn type="submit" color="primary" block class="mt-2" @click="createTask">Submit</v-btn>
@@ -155,7 +171,6 @@
     <v-list-item
         v-for="task in uncompletedTasks"
         :key="task._id"
-        :title="task.title"
     >
       <template v-slot:prepend>
         <v-checkbox
@@ -164,7 +179,19 @@
             hide-details
         ></v-checkbox>
       </template>
-      <p></p>
+      <v-container>
+        <v-row justify="space-between">
+          <v-col><v-list-item-title>
+            {{ task.title }}
+            <v-tooltip
+              activator="parent"
+              location="top"
+            >{{ task.description }}</v-tooltip>
+          </v-list-item-title></v-col>
+          <v-col><p style="text-align: end">{{ "Deadline: " + formatDateTimeToLocal(task.deadline) }}</p></v-col>
+        </v-row>
+      </v-container>
+
       <template v-slot:append>
         <v-btn
             color="grey-lighten-1"
@@ -189,10 +216,18 @@
         class="flex align-content-center"
     >
       <template v-slot:default>
-          <v-list-item-title
-              v-text="task.title"
-              :class="{ 'text-decoration-line-through': task.completed }"
-          ></v-list-item-title>
+        <v-container>
+          <v-row justify="space-between">
+            <v-col><v-list-item-title :class="{ 'text-decoration-line-through': task.completed }">
+              {{ task.title }}
+              <v-tooltip
+                  activator="parent"
+                  location="top"
+              >{{ task.description }}</v-tooltip>
+            </v-list-item-title></v-col>
+            <v-col><p style="text-align: end">{{ "Deadline: " + formatDateTimeToLocal(task.deadline) }}</p></v-col>
+          </v-row>
+        </v-container>
       </template>
 
       <template v-slot:prepend>
@@ -207,7 +242,12 @@
       <template v-slot:append>
         <v-btn
             color="grey-lighten-1"
-            icon="mdi-information"
+            icon="mdi-pencil"
+            variant="text"
+        ></v-btn>
+        <v-btn
+            color="grey-lighten-1"
+            icon="mdi-delete"
             variant="text"
         ></v-btn>
       </template>

@@ -52,6 +52,7 @@ export default defineNuxtPlugin((nuxtApp) => {
       VDialog: {},
       VForm: {},
       VSheet: {},
+      VRow: {},
     },
   });
   nuxtApp.vueApp.use(vuetify);
