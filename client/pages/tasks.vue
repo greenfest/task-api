@@ -136,15 +136,15 @@
               <v-btn type="submit" color="primary" block class="mt-2" @click="createTask">Submit</v-btn>
               <v-alert
                   v-if="isError"
-                  class="mb-3"
+                  class="mb-3 mt-3"
                   color="error"
                   variant="tonal"
                   type="error"
-                  text="The email address or password you entered is incorrect."
+                  text="A new task wasn't added"
               ></v-alert>
               <v-alert
                   v-if="isSuccess"
-                  class="mb-3"
+                  class="mb-3 mt-3"
                   color="success"
                   variant="tonal"
                   type="success"
@@ -156,7 +156,7 @@
         <v-card-actions class="justify-end">
           <v-btn
               variant="text"
-              @click="isActive.value = false; isError = false; isSuccess = false"
+              @click="isActive.value = false; isError = !isError; isSuccess = !isSuccess"
           >Close</v-btn>
         </v-card-actions>
       </v-card>
@@ -193,11 +193,73 @@
       </v-container>
 
       <template v-slot:append>
-        <v-btn
-            color="grey-lighten-1"
-            icon="mdi-pencil"
-            variant="text"
-        ></v-btn>
+
+        <v-dialog
+            transition="dialog-top-transition"
+            width="auto"
+        >
+          <template v-slot:activator="{ props }">
+            <v-btn
+                color="grey-lighten-1"
+                icon="mdi-pencil"
+                variant="text"
+                v-bind="props"
+            ></v-btn>
+          </template>
+          <template v-slot:default="{ isActive }">
+            <v-card>
+              <v-toolbar
+                  color="primary"
+                  title="Edit the task"
+              ></v-toolbar>
+              <v-card-text>
+                <v-sheet width="300" class="mx-auto">
+                  <v-form fast-fail @submit.prevent>
+                    <v-text-field
+                        v-model="task.title"
+                        label="Title"
+                    ></v-text-field>
+                    <v-text-field
+                        v-model="task.description"
+                        label="Description"
+                    ></v-text-field>
+                    <v-text-field
+                        v-model="task.deadline"
+                        label="Deadline"
+                        type="datetime-local"
+                        value="task.deadline"
+                    ></v-text-field>
+
+                    <v-btn type="submit" color="primary" block class="mt-2" @click="createTask">Edit</v-btn>
+                    <v-alert
+                        v-if="isError"
+                        class="mb-3 mt-3"
+                        color="error"
+                        variant="tonal"
+                        type="error"
+                        text="The task wasn't edited."
+                    ></v-alert>
+                    <v-alert
+                        v-if="isSuccess"
+                        class="mb-3"
+                        color="success"
+                        variant="tonal"
+                        type="success"
+                        text="The task was edited."
+                    ></v-alert>
+                  </v-form>
+                </v-sheet>
+              </v-card-text>
+              <v-card-actions class="justify-end">
+                <v-btn
+                    variant="text"
+                    @click="isActive.value = false; isError = !isError; isSuccess = !isSuccess"
+                >Close</v-btn>
+              </v-card-actions>
+            </v-card>
+          </template>
+        </v-dialog>
+
         <v-btn
             color="grey-lighten-1"
             icon="mdi-delete"
