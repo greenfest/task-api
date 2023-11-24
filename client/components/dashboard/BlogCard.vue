@@ -1,21 +1,34 @@
 <script setup lang="ts">
-import { ClockHour4Icon, MessageCircle2Icon, MessageCircleIcon } from 'vue-tabler-icons';
+import { ClockHour4Icon, MessageCircle2Icon } from 'vue-tabler-icons';
+import {format, parseISO} from "date-fns";
+import {utcToZonedTime} from "date-fns-tz";
+const response = await fetch("https://api.quotable.io/random");
+const quote = await response.json();
+
+const date = ref(new Date().toISOString());
+
+function formatDateTimeToLocal(dateTimeString: any) {
+  const utcDateTime = parseISO(dateTimeString);
+  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const zonedDateTime = utcToZonedTime(utcDateTime, timeZone);
+
+  return format(zonedDateTime, 'dd MMMM yyyy');
+}
 
 </script>
 
 <template>
   <VCard elevation="10" class="overflow-hidden">
-    <img style="width: 100%" src="/images/backgrounds/u5.jpg" />
+    <img style="width: 100%" src="/images/backgrounds/u5.jpg"  alt=""/>
     <v-card-text>
       <h3 class="text-h6 d-flex align-center">
         <ClockHour4Icon class="mr-1" size="20"/>
-        22 March, 2022
+        {{ formatDateTimeToLocal(date) }}
       </h3>
       <h5 class="mb-2 mt-5 text-h5">
-        Super awesome, Vue 3 is there, Lets do this!
+        {{ quote.content }}
       </h5>
-      <v-chip class="mr-2" label size="small" color="primary"> Medium </v-chip>
-      <v-chip class="mr-2" label size="small" color="error"> Low </v-chip>
+      <v-chip class="mr-2" label="" size="small" color="primary"> {{ quote.author }} </v-chip>
       <v-divider class="mt-7"></v-divider>
       <div class="d-flex align-center mt-4">
         <v-avatar size="40">

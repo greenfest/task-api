@@ -48,7 +48,7 @@ router.post("/", auth.required, async (req, res) => {
         description: req.body.description,
         date: new Date(),
         userId: userId,
-        deadline: new Date(req.body.deadline),
+        deadline: new Date((req.body.deadline) ? (req.body.deadline) : Date.now()),
         completed: false
     });
 
@@ -71,7 +71,7 @@ router.patch("/:id", auth.required, async (req, res) => {
     };
 
     try {
-        const result = await Task.updateOne(query, updates);
+        await Task.updateOne(query, updates);
         const updatedTask = await Task.findById(req.params.id);
         res.status(200).json(updatedTask);
     } catch (error) {
@@ -84,9 +84,9 @@ router.delete("/:id", auth.required, async (req, res) => {
     try {
         const result = await Task.deleteOne(query);
         if (result.deletedCount === 1) {
-            res.status(200).json({ message: "Задача успешно удалена" });
+            res.status(200).json({ message: "Задача успешно удалена", error: false });
         } else {
-            res.status(404).json({ message: "Запись не найдена" });
+            res.status(404).json({ message: "Запись не найдена", error: true });
         }
     } catch (error) {
         res.status(400).json({ message: error.message });
