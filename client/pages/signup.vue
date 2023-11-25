@@ -6,7 +6,7 @@ definePageMeta({
 import { storeToRefs } from 'pinia'; // import storeToRefs helper hook from pinia
 import { useAuthStore } from '~/store/auth'; // import the auth store we just created
 
-const { authenticateUser } = useAuthStore(); // use authenticateUser action from  auth store
+const { signUpUser } = useAuthStore(); // use authenticateUser action from  auth store
 const { authenticated } = storeToRefs(useAuthStore()); // make authenticated state reactive with storeToRefs
 
 const visiblePassword = ref(false);
@@ -17,6 +17,7 @@ const isValid = ref(false);
 const user = ref({
   email: '',
   password: '',
+  confirmPassword: '',
 });
 
 const emailRules = [
@@ -26,6 +27,11 @@ const emailRules = [
 
 const passwordRules = [
   v => !!v || 'Password is required',
+];
+
+const confirmPasswordRules = [
+  v => !!v || 'Password is required',
+  v => v === user.value.password || 'Please make sure your passwords match',
 ];
 
 const checkEmailFormat = () => {
@@ -47,8 +53,8 @@ let incorrectAuth = ref(false);
 const router = useRouter();
 
 
-const login = async () => {
-  const error = await authenticateUser(user.value);
+const signup = async () => {
+  const error = await signUpUser(user.value);
   if (error) {
     incorrectAuth.value = true;
     console.error(error);
@@ -62,12 +68,16 @@ const login = async () => {
   }
 };
 
+const activateSubmit = computed(() => {
+  return isValid.value && (user.value.password === user.value.confirmPassword) ;
+});
+
 </script>
 
 <template>
   <div>
 
-    <div class="text-h1 mx-auto my-6" style="max-width: 228px; text-align: center">Sign In</div>
+    <div class="text-h1 mx-auto my-6" style="max-width: 228px; text-align: center">Sign Up</div>
 
     <v-card
         class="mx-auto pa-12 pb-8"
@@ -75,7 +85,7 @@ const login = async () => {
         max-width="448"
         rounded="lg"
     >
-      <div class="text-subtitle-1 text-medium-emphasis">Account</div>
+      <div class="text-subtitle-1 text-medium-emphasis">Email</div>
 
       <v-text-field
           density="compact"
@@ -89,14 +99,6 @@ const login = async () => {
 
       <div class="text-subtitle-1 text-medium-emphasis d-flex align-center justify-space-between">
         Password
-
-        <a
-            class="text-caption text-decoration-none text-blue"
-            href="#"
-            rel="noopener noreferrer"
-            target="_blank"
-        >
-          Forgot login password?</a>
       </div>
 
       <v-text-field
@@ -112,14 +114,27 @@ const login = async () => {
           :rules="passwordRules"
       ></v-text-field>
 
+      <div class="text-subtitle-1 text-medium-emphasis d-flex align-center justify-space-between">
+        Confirm Password
+      </div>
+
+      <v-text-field
+          :append-inner-icon="visiblePassword ? 'mdi-eye-off' : 'mdi-eye'"
+          :type="visiblePassword ? 'text' : 'password'"
+          density="compact"
+          placeholder="Confirm your password"
+          prepend-inner-icon="mdi-lock-outline"
+          variant="outlined"
+          @click:append-inner="visiblePassword = !visiblePassword"
+          v-model="user.confirmPassword"
+          :rules="confirmPasswordRules"
+      ></v-text-field>
+
       <v-card
           class="mb-12"
           color="surface-variant"
           variant="tonal"
       >
-        <v-card-text class="text-medium-emphasis text-caption">
-          Warning: After 3 consecutive failed login attempts, you account will be temporarily locked for three hours. If you must login now, you can also click "Forgot login password?" below to reset the login password.
-        </v-card-text>
       </v-card>
 
       <v-btn
@@ -128,25 +143,11 @@ const login = async () => {
           color="blue"
           size="large"
           variant="tonal"
-          @click="login"
-          :disabled="!isValid"
+          @click="signup"
+          :disabled="!activateSubmit"
       >
-        Log In
+        Sign Up
       </v-btn>
-
-
-      <NuxtLink to="/signup" class="d-flex">
-        <v-card-text class="text-center">
-          <a
-              class="text-blue text-decoration-none"
-              href="#"
-              rel="noopener noreferrer"
-              target="_blank"
-          >
-            Sign up now <v-icon icon="mdi-chevron-right"></v-icon>
-          </a>
-        </v-card-text>
-      </NuxtLink>
 
       <v-alert
           v-if="incorrectAuth"

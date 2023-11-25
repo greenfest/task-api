@@ -71,7 +71,6 @@ router.post('/', auth.optional, async (req, res, next) => {
 //POST login route (optional, everyone has access)
 router.post('/login', auth.optional, (req, res, next) => {
     const { body: { user } } = req;
-
     if(!user.email) {
         return res.status(422).json({
             errors: {

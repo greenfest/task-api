@@ -28,5 +28,6 @@ export type ThemeTypes = {
         grey100?: string;
         grey200?: string;
         darkbg?:string;
+        darksuccess?:string;
     };
 };

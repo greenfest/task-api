@@ -17,8 +17,15 @@
   }
 
   const tasks: Tasks = await response.json();
-  tasks.uncompleted.forEach((task: { deadline: string | any[]; }) => task.deadline = task.deadline.slice(0, 19))
-  tasks.completed.forEach((task: { deadline: string | any[]; }) => task.deadline = task.deadline.slice(0, 19))
+
+  if (tasks.completed.length !== 0) {
+    tasks.completed.forEach((task: { deadline: string | any[]; }) => task.deadline = task.deadline.slice(0, 19));
+  }
+
+  if (tasks.uncompleted.length !== 0) {
+    tasks.uncompleted.forEach((task: { deadline: string | any[]; }) => task.deadline = task.deadline.slice(0, 19));
+  }
+
 
   interface CompletedTasks {
     _id: string;
@@ -38,8 +45,8 @@
     completed: boolean;
   }
 
-  const uncompletedTasks: UncompletedTasks= ref(tasks.uncompleted);
-  const completedTasks: CompletedTasks = ref(tasks.completed);
+  const uncompletedTasks: UncompletedTasks= ref(tasks.uncompleted.length ? tasks.uncompleted : []);
+  const completedTasks: CompletedTasks = ref(tasks.completed.length ? tasks.completed : []);
 
   async function toggleTask(taskId: string, isCompleted: boolean) {
     try {
@@ -208,6 +215,10 @@
     }
   }
 
+  const areArraysNotEmpty = () => {
+    return completedTasks.value.length || uncompletedTasks.value.length;
+  };
+
 </script>
 
 <template>
@@ -259,7 +270,7 @@
 
 
 
-  <v-list class="rounded">
+  <v-list class="rounded" v-if="areArraysNotEmpty()">
     <v-list-subheader>Uncompleted tasks</v-list-subheader>
 
     <v-list-item
@@ -275,14 +286,50 @@
       </template>
       <v-container>
         <v-row justify="space-between">
-          <v-col><v-list-item-title>
-            {{ task.title }}
-            <v-tooltip
-              activator="parent"
-              location="top"
-            >{{ task.description }}</v-tooltip>
-          </v-list-item-title></v-col>
-          <v-col><p class="hidden-xs" style="text-align: end"><v-icon class="mr-2" icon="mdi-clock"></v-icon>{{ formatDateTimeToLocal(task.deadline) }}</p></v-col>
+          <v-col class="w-75 text-truncate">
+            <v-dialog
+                transition="dialog-top-transition"
+                width="auto"
+            >
+              <template v-slot:activator="{ props }">
+                <v-list-item-title v-bind="props">
+                  <p :class="{ 'text-decoration-line-through': task.completed }">{{ task.title }}</p>
+                  <p class="d-flex d-sm-none"><v-icon class="mr-2" icon="mdi-clock"></v-icon>{{ formatDateTimeToLocal(task.deadline) }}</p>
+                  <v-tooltip
+                      v-if="task.description"
+                      activator="parent"
+                      location="bottom"
+                  >{{ task.description }}</v-tooltip>
+                </v-list-item-title>
+              </template>
+              <template v-slot:default="{ isActive }">
+                <v-card>
+                  <v-toolbar
+                      color="primary"
+                      title="Task"
+                  ></v-toolbar>
+                  <v-card-text>
+                    <v-sheet width="300" class="mx-auto">
+                      <p class="font-weight-bold ">Title:</p>
+                      <p>{{ task.title }}</p>
+                      <p class="font-weight-bold mt-2" v-if="task.description">Description:</p>
+                      <p>{{ task.description }}</p>
+                      <p class="font-weight-bold mt-2" v-if="task.deadline">Deadline:</p>
+                      <p>{{ formatDateTimeToLocal(task.deadline) }}</p>
+                    </v-sheet>
+
+                  </v-card-text>
+                  <v-card-actions class="justify-end">
+                    <v-btn
+                        variant="text"
+                        @click="isActive.value = false"
+                    >Close</v-btn>
+                  </v-card-actions>
+                </v-card>
+              </template>
+            </v-dialog>
+            </v-col>
+          <v-col class="w-25 hidden-xs"><p style="text-align: end"><v-icon class="mr-2" icon="mdi-clock"></v-icon>{{ formatDateTimeToLocal(task.deadline) }}</p></v-col>
         </v-row>
       </v-container>
 
@@ -310,14 +357,18 @@
               <v-card-text>
                 <v-sheet width="300" class="mx-auto">
                   <v-form fast-fail @submit.prevent>
-                    <v-text-field
+                    <v-textarea
+                        rows="1"
                         v-model="editedTask.value.title"
                         label="Title"
-                    ></v-text-field>
-                    <v-text-field
+                        variant="outlined"
+                    ></v-textarea>
+                    <v-textarea
+                        rows="1"
                         v-model="editedTask.value.description"
                         label="Description"
-                    ></v-text-field>
+                        variant="outlined"
+                    ></v-textarea>
                     <v-text-field
                         v-model="editedTask.value.deadline"
                         label="Deadline"
@@ -348,37 +399,67 @@
     </v-list-item>
   </v-list>
 
-  <v-list class="rounded">
+  <v-list class="rounded" v-if="areArraysNotEmpty()">
     <v-list-subheader>Completed tasks</v-list-subheader>
-
     <v-list-item
         v-for="task in completedTasks"
         :key="task._id"
-        class="flex align-content-center"
     >
-      <template v-slot:default>
-        <v-container>
-          <v-row justify="space-between">
-            <v-col><v-list-item-title :class="{ 'text-decoration-line-through': task.completed }">
-              {{ task.title }}
-              <v-tooltip
-                  activator="parent"
-                  location="top"
-              >{{ task.description }}</v-tooltip>
-            </v-list-item-title></v-col>
-            <v-col><p style="text-align: end">{{ "Deadline: " + formatDateTimeToLocal(task.deadline) }}</p></v-col>
-          </v-row>
-        </v-container>
-      </template>
-
       <template v-slot:prepend>
         <v-checkbox
-            v-model="task.completed"
             @click="toggleTask(task._id, task.completed)"
             color="primary"
             hide-details
         ></v-checkbox>
       </template>
+      <v-container>
+        <v-row justify="space-between">
+          <v-col class="w-75 text-truncate">
+            <v-dialog
+                transition="dialog-top-transition"
+                width="auto"
+            >
+              <template v-slot:activator="{ props }">
+                <v-list-item-title  v-bind="props">
+                  <p :class="{ 'text-decoration-line-through': task.completed }">{{ task.title }}</p>
+                  <p class="d-flex d-sm-none"><v-icon class="mr-2" icon="mdi-clock"></v-icon>{{ formatDateTimeToLocal(task.deadline) }}</p>
+                  <v-tooltip
+                      v-if="task.description"
+                      activator="parent"
+                      location="bottom"
+                  >{{ task.description }}</v-tooltip>
+                </v-list-item-title>
+              </template>
+              <template v-slot:default="{ isActive }">
+                <v-card>
+                  <v-toolbar
+                      color="primary"
+                      title="Task"
+                  ></v-toolbar>
+                  <v-card-text>
+                    <v-sheet width="300" class="mx-auto">
+                      <p class="font-weight-bold ">Title:</p>
+                      <p>{{ task.title }}</p>
+                      <p class="font-weight-bold mt-2" v-if="task.description">Description:</p>
+                      <p>{{ task.description }}</p>
+                      <p class="font-weight-bold mt-2" v-if="task.deadline">Deadline:</p>
+                      <p>{{ formatDateTimeToLocal(task.deadline) }}</p>
+                    </v-sheet>
+
+                  </v-card-text>
+                  <v-card-actions class="justify-end">
+                    <v-btn
+                        variant="text"
+                        @click="isActive.value = false"
+                    >Close</v-btn>
+                  </v-card-actions>
+                </v-card>
+              </template>
+            </v-dialog>
+          </v-col>
+          <v-col class="w-25 hidden-xs"><p style="text-align: end"><v-icon class="mr-2" icon="mdi-clock"></v-icon>{{ formatDateTimeToLocal(task.deadline) }}</p></v-col>
+        </v-row>
+      </v-container>
 
       <template v-slot:append>
 
@@ -404,14 +485,18 @@
               <v-card-text>
                 <v-sheet width="300" class="mx-auto">
                   <v-form fast-fail @submit.prevent>
-                    <v-text-field
+                    <v-textarea
+                        rows="1"
                         v-model="editedTask.value.title"
                         label="Title"
-                    ></v-text-field>
-                    <v-text-field
+                        variant="outlined"
+                    ></v-textarea>
+                    <v-textarea
+                        rows="1"
                         v-model="editedTask.value.description"
                         label="Description"
-                    ></v-text-field>
+                        variant="outlined"
+                    ></v-textarea>
                     <v-text-field
                         v-model="editedTask.value.deadline"
                         label="Deadline"
@@ -419,7 +504,6 @@
                     ></v-text-field>
 
                     <v-btn type="submit" color="primary" :block="true" class="mt-2" @click="editTask(editedTask.value)">Edit</v-btn>
-
                   </v-form>
                 </v-sheet>
               </v-card-text>
@@ -439,10 +523,10 @@
             variant="text"
             @click="deleteTask(task._id, task.completed)"
         ></v-btn>
-
       </template>
     </v-list-item>
   </v-list>
+  <p v-else class="mt-3">There are no tasks yet. You can add a new task.</p>
 
 
 <!-- Snackbars - Adding -->
