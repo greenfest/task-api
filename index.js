@@ -4,6 +4,7 @@ require('./models/Users');
 require('./config/passport');
 const cors = require('cors');
 const tasks = require('./routes/tasks');
+const chart = require('./routes/chart');
 const users = require('./routes/users');
 const bodyParser = require('body-parser');
 const app = express();
@@ -14,6 +15,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use("/tasks", tasks);
+app.use("/chart", chart);
 app.use("/users", users);
 
 const PORT = process.env.PORT || 3000;

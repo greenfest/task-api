@@ -6,7 +6,8 @@ const taskSchema = new db.Schema({
     date: Date,
     deadline: Date,
     userId: String,
-    completed: Boolean
+    completed: Boolean,
+    dateCompleted: Date,
 });
 
 const Tasks = db.model('Tasks', taskSchema);

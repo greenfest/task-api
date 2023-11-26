@@ -36,32 +36,6 @@ const sidebarItem: menu[] = [
     icon: ListCheckIcon,
     to: "/tasks",
   },
-  { header: 'Utilities' },
-  {
-    title: "Alert",
-    icon: AlertCircleIcon,
-    to: "/ui-components/alerts",
-  },
-  {
-    title: "Button",
-    icon: CircleDotIcon,
-    to: "/ui-components/buttons",
-  },
-  {
-    title: "Cards",
-    icon: BoxMultiple1Icon,
-    to: "/ui-components/cards",
-  },
-  {
-    title: "Curousel",
-    icon: AdjustmentsHorizontalIcon,
-    to: "/ui-components/curousel",
-  },
-  {
-    title: "Tables",
-    icon: BorderAllIcon,
-    to: "/ui-components/tabels",
-  },
 
  
 

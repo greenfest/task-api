@@ -34,6 +34,7 @@
     value: any;
     description: string;
     completed: boolean;
+    dateCompleted: string;
   }
 
   interface UncompletedTasks {
@@ -43,6 +44,7 @@
     value: any;
     description: string;
     completed: boolean;
+    dateCompleted: string;
   }
 
   const uncompletedTasks: UncompletedTasks= ref(tasks.uncompleted.length ? tasks.uncompleted : []);
@@ -58,6 +60,7 @@
         },
         body: JSON.stringify({
           completed: !isCompleted,
+          dateCompleted: new Date,
         }),
       });
 
@@ -164,6 +167,7 @@
     value: any;
     description: string;
     completed: boolean;
+    dateCompleted: string;
   }
 
 
@@ -176,6 +180,7 @@
     value: [],
     description: '',
     completed: false,
+    dateCompleted: '',
   });
   async function editTask(editedTask: Task) {
     try {

@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted,computed } from "vue";
+const token = useCookie('token');
+
 /*Chart*/
 const chartOptions = computed(() => {
     return {
@@ -34,8 +36,8 @@ const chartOptions = computed(() => {
     },
     yaxis: {
       show: true,
-      min: 100,
-      max: 400,
+      min: 0,
+      max: 10,
       tickAmount: 3,
       labels: {
         style: {
@@ -49,15 +51,28 @@ const chartOptions = computed(() => {
       lineCap: "butt",
       colors: ["transparent"],
     },
-    tooltip: { theme: "dark" },
+    tooltip: { theme: "light" },
     };
 });
-const Chart = {
-  series: [
-    { name: "Ample", data: [355, 390, 300, 350, 390, 180, 250] },
-    { name: "Pixel", data: [280, 250, 325, 215, 250, 310, 170] },
-  ],
-};
+
+const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+console.log(userTimezone);
+const response = await fetch('http://localhost:4000/chart/', {
+  method: "POST",
+  headers: {
+    "Authorization": token ? "Bearer " + token.value : "",
+  },
+  body: JSON.stringify({"timezone": userTimezone}),
+});
+const Chart = await response.json();
+console.log(Chart);
+
+//     {
+//   series: [
+//     { name: "Completed", data: [355, 390, 300, 350, 390, 180, 250] },
+//     { name: "Uncompleted", data: [280, 250, 325, 215, 250, 310, 170] },
+//   ],
+// };
 
 const elementVisible = ref(false);
 onMounted(() => {
@@ -73,8 +88,8 @@ onMounted(() => {
     <v-card-text>
       <div class="d-sm-flex align-center">
         <div>
-          <h3 class="text-h5 title mb-1">Sales Overview</h3>
-          <h5 class="text-subtitle-1">Ample Admin Vs Pixel Admin</h5>
+          <h3 class="text-h5 title mb-1">Tasks Overview</h3>
+          <h5 class="text-subtitle-1">Completed tasks vs Uncompleted tasks</h5>
         </div>
         <div class="ml-auto">
           <div class="d-flex align-center">
@@ -83,7 +98,7 @@ onMounted(() => {
                 <span class="text-overline">
                   <i class="mdi mdi-brightness-1 mx-1"></i>
                 </span>
-                <span class="font-weight-regular">Ample</span>
+                <span class="font-weight-regular">Completed</span>
               </span>
             </div>
             <div class="d-flex align-center px-2">
@@ -91,7 +106,7 @@ onMounted(() => {
                 <span class="text-overline">
                   <i class="mdi mdi-brightness-1 mx-1"></i>
                 </span>
-                <span class="font-weight-regular">Pixel Admin</span>
+                <span class="font-weight-regular">Uncompleted</span>
               </span>
             </div>
           </div>

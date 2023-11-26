@@ -149,13 +149,26 @@ const activateSubmit = computed(() => {
         Sign Up
       </v-btn>
 
+      <NuxtLink to="/login" class="d-flex">
+        <v-card-text class="text-center">
+          <a
+              class="text-blue text-decoration-none"
+              href="#"
+              rel="noopener noreferrer"
+              target="_blank"
+          >
+            Sign up now <v-icon icon="mdi-chevron-right"></v-icon>
+          </a>
+        </v-card-text>
+      </NuxtLink>
+
       <v-alert
           v-if="incorrectAuth"
           class="mb-3"
           color="error"
           variant="tonal"
           type="error"
-          text="The email address or password you entered is incorrect."
+          text="There is an error. Please try again later."
       ></v-alert>
 
     </v-card>
