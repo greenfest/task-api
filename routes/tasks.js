@@ -46,12 +46,11 @@ router.post("/", auth.required, async (req, res) => {
     const task = new Task({
         title: req.body.title,
         description: req.body.description,
-        date: new Date(),
+        date: req.body.date ? new Date(req.body.date) : new Date(),
         userId: userId,
         deadline: new Date((req.body.deadline) ? (req.body.deadline) : Date.now()),
         completed: false
     });
-
     try {
         const newTask = await task.save();
         res.status(201).json(newTask);
@@ -67,7 +66,8 @@ router.patch("/:id", auth.required, async (req, res) => {
         description: req.body.description,
         date: req.body.date,
         deadline: req.body.deadline,
-        completed: req.body.completed
+        completed: req.body.completed,
+        dateCompleted: req.body.dateCompleted
     };
 
     try {

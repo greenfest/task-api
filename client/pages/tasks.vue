@@ -105,6 +105,7 @@
     try {
       const taskObj = {...newTask.value};
       taskObj.deadline = new Date(taskObj.deadline);
+      console.log(taskObj.date);
       const response = await fetch(`http://localhost:4000/tasks/`, {
         method: "POST",
         headers: {

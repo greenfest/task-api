@@ -2,6 +2,36 @@
 import { ref, onMounted,computed } from "vue";
 const token = useCookie('token');
 
+const userTimezone = { timezone: Intl.DateTimeFormat().resolvedOptions().timeZone };
+const response = await fetch('http://localhost:4000/chart/', {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    "Authorization": token ? "Bearer " + token.value : "",
+  },
+  body: JSON.stringify(userTimezone),
+});
+const Chart = await response.json();
+let max = 10;
+let roundedMax = 10;
+if (Chart.series) {
+  max = Chart.series[0].data.reduce((accumulator: number, currentValue: number) => {
+    if (currentValue > accumulator) {
+      return currentValue;
+    } else {
+      return accumulator;
+    }
+  }, max);
+  max = Chart.series[1].data.reduce((accumulator: number, currentValue: number) => {
+    if (currentValue > accumulator) {
+      return currentValue;
+    } else {
+      return accumulator;
+    }
+  }, max);
+  roundedMax = Math.ceil(max / 10) * 10;
+}
+
 /*Chart*/
 const chartOptions = computed(() => {
     return {
@@ -37,7 +67,7 @@ const chartOptions = computed(() => {
     yaxis: {
       show: true,
       min: 0,
-      max: 10,
+      max: roundedMax,
       tickAmount: 3,
       labels: {
         style: {
@@ -55,24 +85,6 @@ const chartOptions = computed(() => {
     };
 });
 
-const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-console.log(userTimezone);
-const response = await fetch('http://localhost:4000/chart/', {
-  method: "POST",
-  headers: {
-    "Authorization": token ? "Bearer " + token.value : "",
-  },
-  body: JSON.stringify({"timezone": userTimezone}),
-});
-const Chart = await response.json();
-console.log(Chart);
-
-//     {
-//   series: [
-//     { name: "Completed", data: [355, 390, 300, 350, 390, 180, 250] },
-//     { name: "Uncompleted", data: [280, 250, 325, 215, 250, 310, 170] },
-//   ],
-// };
 
 const elementVisible = ref(false);
 onMounted(() => {

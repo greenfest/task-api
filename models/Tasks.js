@@ -1,13 +1,26 @@
 const db = require("../db/conn");
 
 const taskSchema = new db.Schema({
-    title: String,
+    title: {
+        type: String,
+        default: "Task",
+    },
     description: String,
-    date: Date,
+    date: {
+        type: Date,
+        default: Date.now,
+    },
     deadline: Date,
     userId: String,
-    completed: Boolean,
+    completed: {
+        type: Boolean,
+        default: false,
+    },
     dateCompleted: Date,
+    archived: {
+        type: Boolean,
+        default: false,
+    }
 });
 
 const Tasks = db.model('Tasks', taskSchema);
