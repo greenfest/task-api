@@ -19,8 +19,8 @@ export type Task = {
 }
 
 export type TaskResponse = {
-    uncompleted: any;
-    completed: any;
+    uncompleted: Array<Task>;
+    completed: Array<Task>;
 }
 
 

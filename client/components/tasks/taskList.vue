@@ -2,25 +2,29 @@
 import type { Tasks, Task, TaskResponse } from '@/types/taskTypes';
 import {format, parseISO} from "date-fns";
 import {utcToZonedTime} from "date-fns-tz";
+const token = useCookie('token');
+
 
 const props = defineProps({
   title: String,
-  tasks: Array<TaskResponse>,
+  modelValue: Object as () => Ref<TaskResponse | undefined>,
 });
 
-const token = useCookie('token');
+const emits = defineEmits(["update:modelValue"]);
 
-if (props.tasks.completed.length !== 0) {
-  props.tasks.completed.forEach((task: { deadline: string | any[]; }) => task.deadline = task.deadline.slice(0, 19));
+const tasks = ref(props.modelValue);
+console.log(tasks.value);
+
+
+if (tasks.value.completed.length !== 0) {
+  tasks.value.completed.forEach((task: { deadline: string | any[]; }) => task.deadline = task.deadline.slice(0, 19));
 }
 
-if (props.tasks.uncompleted.length !== 0) {
-  props.tasks.uncompleted.forEach((task: { deadline: string | any[]; }) => task.deadline = task.deadline.slice(0, 19));
+if (tasks.value.uncompleted.length !== 0) {
+  tasks.value.uncompleted.forEach((task: { deadline: string | any[]; }) => task.deadline = task.deadline.slice(0, 19));
 }
-
-const uncompletedTasks: Tasks = ref(props.tasks.uncompleted.length ? props.tasks.uncompleted : []);
-const completedTasks: Tasks = ref(props.tasks.completed.length ? props.tasks.completed : []);
-
+// const uncompletedTasks: Ref<Task[]> = ref(tasks.value.uncompleted.length ? tasks.value.uncompleted : []);
+// const completedTasks: Ref<Task[]> = ref(tasks.value.completed.length ? tasks.value.completed : []);
 async function toggleTask(taskId: string, isCompleted: boolean) {
   try {
     const response = await fetch(`http://localhost:4000/tasks/${taskId}`, {
@@ -36,8 +40,8 @@ async function toggleTask(taskId: string, isCompleted: boolean) {
     });
 
     await response.json();
-
-    updateTaskStatusLocally(taskId, !isCompleted);
+    emits("update:modelValue", tasks);
+    // updateTaskStatusLocally(taskId, !isCompleted);
   } catch (error) {
     console.error('Error updating task status', error);
   }
@@ -58,39 +62,6 @@ function updateTaskStatusLocally(taskId: string, isCompleted: boolean) {
       uncompletedTasks.value.push(taskToUpdate);
       completedTasks.value = completedTasks.value.filter((task: { _id: string; }) => task._id !== taskId);
     }
-  }
-}
-
-const newTask = ref({
-  title: null,
-  description: null,
-  date: new Date,
-  deadline: new Date,
-  completed: false,
-});
-
-
-
-async function createTask() {
-  try {
-    const taskObj = {...newTask.value};
-    taskObj.deadline = new Date(taskObj.deadline);
-    console.log(taskObj.date);
-    const response = await fetch(`http://localhost:4000/tasks/`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": token ? "Bearer " + token.value : "",
-      },
-      body: JSON.stringify(taskObj),
-    });
-
-    const task = await response.json();
-    uncompletedTasks.value.push(task);
-    snackbarTaskAdded.value = true;
-  } catch (error) {
-    console.error('Error creating a new task', error);
-    snackbarTaskAdded.value = true;
   }
 }
 
@@ -151,7 +122,6 @@ async function editTask(editedTask: Task) {
       body: JSON.stringify( {...editedTask} ),
     });
     const json = await response.json();
-    console.log(json);
     if (!json.message) {
       snackbarTaskEdited.value = true;
       if (editedTask.completed) {
@@ -191,7 +161,7 @@ const areArraysNotEmpty = () => {
     <v-list-subheader>{{ props.title }}</v-list-subheader>
 
     <v-list-item
-        v-for="task in props.tasks"
+        v-for="task in props.title === 'Uncompleted Tasks' ? tasks.value?.uncompleted || [] : tasks.value?.completed || []"
         :key="task._id"
     >
       <template v-slot:prepend>
@@ -211,7 +181,8 @@ const areArraysNotEmpty = () => {
               <template v-slot:activator="{ props }">
                 <v-list-item-title v-bind="props">
                   <p :class="{ 'text-decoration-line-through': task.completed }">{{ task.title }}</p>
-                  <p class="d-flex d-sm-none"><v-icon class="mr-2" icon="mdi-clock"></v-icon>{{ formatDateTimeToLocal(task.deadline) }}</p>
+                  <p class="d-flex d-sm-none"><v-icon class="mr-2" icon="mdi-clock"></v-icon>
+                    {{ formatDateTimeToLocal(task.deadline) }}</p>
                   <v-tooltip
                       v-if="task.description"
                       activator="parent"

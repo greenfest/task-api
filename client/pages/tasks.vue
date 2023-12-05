@@ -1,17 +1,31 @@
 <script setup lang="ts">
 
-  import type { Tasks, Task, TaskResponse } from '@/types/taskTypes';
-  import TaskList from "~/components/tasks/taskList.vue";
+import type {TaskResponse} from '@/types/taskTypes';
+import TaskList from "~/components/tasks/taskList.vue";
 
-  const token = useCookie('token');
+const token = useCookie('token');
   const response = await fetch('http://localhost:4000/tasks', {
     method: "GET",
     headers: {
       "Authorization": token ? "Bearer " + token.value : "",
     },
   });
+  const tasksObj = await response.json();
+  let tasks: Ref<TaskResponse> = ref(tasksObj);
 
-  const tasks: TaskResponse = await response.json();
+  async function fetchTasks() {
+    const response = await fetch('http://localhost:4000/tasks', {
+      method: "GET",
+      headers: {
+        "Authorization": token ? "Bearer " + token.value : "",
+      },
+    });
+    tasks.value = await response.json();
+  }
+
+
+
+
 
   let snackbarTaskAdded = ref(false);
   let snackbarTaskAddingError = ref(false);
@@ -19,6 +33,38 @@
   let snackbarTaskDeletedError = ref(false);
   let snackbarTaskEdited = ref(false);
   let snackbarTaskEditingError = ref(false);
+
+
+  async function createTask() {
+    try {
+      const taskObj = {...newTask.value};
+      taskObj.deadline = new Date(taskObj.deadline);
+      console.log(taskObj.date);
+      const response = await fetch(`http://localhost:4000/tasks/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": token ? "Bearer " + token.value : "",
+        },
+        body: JSON.stringify(taskObj),
+      });
+
+      const task = await response.json();
+      await fetchTasks();
+      snackbarTaskAdded.value = true;
+    } catch (error) {
+      console.error('Error creating a new task', error);
+      snackbarTaskAddingError.value = true;
+    }
+  }
+
+  const newTask = ref({
+    title: null,
+    description: null,
+    date: new Date,
+    deadline: new Date,
+    completed: false,
+  });
 
   function handleSnackbarEvents(eventName: string) {
     if(eventName === 'snackbarTaskAdded') {
@@ -88,138 +134,17 @@
   <TaskList
       v-bind:title="'Uncompleted Tasks'"
       v-bind:tasks="tasks"
+      v-model="tasks"
       @snackbarEvents="handleSnackbarEvents"
-      ></TaskList>
-
-<!--  <v-list class="rounded" v-if="areArraysNotEmpty()">-->
-<!--    <v-list-subheader>Completed tasks</v-list-subheader>-->
-<!--    <v-list-item-->
-<!--        v-for="task in completedTasks"-->
-<!--        :key="task._id"-->
-<!--    >-->
-<!--      <template v-slot:prepend>-->
-<!--        <v-checkbox-->
-<!--            @click="toggleTask(task._id, task.completed)"-->
-<!--            color="primary"-->
-<!--            hide-details-->
-<!--        ></v-checkbox>-->
-<!--      </template>-->
-<!--      <v-container>-->
-<!--        <v-row justify="space-between">-->
-<!--          <v-col class="w-75 text-truncate">-->
-<!--            <v-dialog-->
-<!--                transition="dialog-top-transition"-->
-<!--                width="auto"-->
-<!--            >-->
-<!--              <template v-slot:activator="{ props }">-->
-<!--                <v-list-item-title  v-bind="props">-->
-<!--                  <p :class="{ 'text-decoration-line-through': task.completed }">{{ task.title }}</p>-->
-<!--                  <p class="d-flex d-sm-none"><v-icon class="mr-2" icon="mdi-clock"></v-icon>{{ formatDateTimeToLocal(task.deadline) }}</p>-->
-<!--                  <v-tooltip-->
-<!--                      v-if="task.description"-->
-<!--                      activator="parent"-->
-<!--                      location="bottom"-->
-<!--                  >{{ task.description }}</v-tooltip>-->
-<!--                </v-list-item-title>-->
-<!--              </template>-->
-<!--              <template v-slot:default="{ isActive }">-->
-<!--                <v-card>-->
-<!--                  <v-toolbar-->
-<!--                      color="primary"-->
-<!--                      title="Task"-->
-<!--                  ></v-toolbar>-->
-<!--                  <v-card-text>-->
-<!--                    <v-sheet width="300" class="mx-auto">-->
-<!--                      <p class="font-weight-bold ">Title:</p>-->
-<!--                      <p>{{ task.title }}</p>-->
-<!--                      <p class="font-weight-bold mt-2" v-if="task.description">Description:</p>-->
-<!--                      <p>{{ task.description }}</p>-->
-<!--                      <p class="font-weight-bold mt-2" v-if="task.deadline">Deadline:</p>-->
-<!--                      <p>{{ formatDateTimeToLocal(task.deadline) }}</p>-->
-<!--                    </v-sheet>-->
-
-<!--                  </v-card-text>-->
-<!--                  <v-card-actions class="justify-end">-->
-<!--                    <v-btn-->
-<!--                        variant="text"-->
-<!--                        @click="isActive.value = false"-->
-<!--                    >Close</v-btn>-->
-<!--                  </v-card-actions>-->
-<!--                </v-card>-->
-<!--              </template>-->
-<!--            </v-dialog>-->
-<!--          </v-col>-->
-<!--          <v-col class="w-25 hidden-xs"><p style="text-align: end"><v-icon class="mr-2" icon="mdi-clock"></v-icon>{{ formatDateTimeToLocal(task.deadline) }}</p></v-col>-->
-<!--        </v-row>-->
-<!--      </v-container>-->
-
-<!--      <template v-slot:append>-->
-
-<!--        <v-dialog-->
-<!--            transition="dialog-top-transition"-->
-<!--            width="auto"-->
-<!--        >-->
-<!--          <template v-slot:activator="{ props }">-->
-<!--            <v-btn-->
-<!--                color="grey-lighten-1"-->
-<!--                icon="mdi-pencil"-->
-<!--                variant="text"-->
-<!--                v-bind="props"-->
-<!--                @click="editedTask.value = {...task}"-->
-<!--            ></v-btn>-->
-<!--          </template>-->
-<!--          <template v-slot:default="{ isActive }">-->
-<!--            <v-card>-->
-<!--              <v-toolbar-->
-<!--                  color="primary"-->
-<!--                  title="Edit the task"-->
-<!--              ></v-toolbar>-->
-<!--              <v-card-text>-->
-<!--                <v-sheet width="300" class="mx-auto">-->
-<!--                  <v-form fast-fail @submit.prevent>-->
-<!--                    <v-textarea-->
-<!--                        rows="1"-->
-<!--                        v-model="editedTask.value.title"-->
-<!--                        label="Title"-->
-<!--                        variant="outlined"-->
-<!--                    ></v-textarea>-->
-<!--                    <v-textarea-->
-<!--                        rows="1"-->
-<!--                        v-model="editedTask.value.description"-->
-<!--                        label="Description"-->
-<!--                        variant="outlined"-->
-<!--                    ></v-textarea>-->
-<!--                    <v-text-field-->
-<!--                        v-model="editedTask.value.deadline"-->
-<!--                        label="Deadline"-->
-<!--                        type="datetime-local"-->
-<!--                    ></v-text-field>-->
-
-<!--                    <v-btn type="submit" color="primary" :block="true" class="mt-2" @click="editTask(editedTask.value)">Edit</v-btn>-->
-<!--                  </v-form>-->
-<!--                </v-sheet>-->
-<!--              </v-card-text>-->
-<!--              <v-card-actions class="justify-end">-->
-<!--                <v-btn-->
-<!--                    variant="text"-->
-<!--                    @click="isActive.value = false"-->
-<!--                >Close</v-btn>-->
-<!--              </v-card-actions>-->
-<!--            </v-card>-->
-<!--          </template>-->
-<!--        </v-dialog>-->
-
-<!--        <v-btn-->
-<!--            color="grey-lighten-1"-->
-<!--            icon="mdi-delete"-->
-<!--            variant="text"-->
-<!--            @click="deleteTask(task._id, task.completed)"-->
-<!--        ></v-btn>-->
-<!--      </template>-->
-<!--    </v-list-item>-->
-<!--  </v-list>-->
-<!--  <p v-else class="mt-3">There are no tasks yet. You can add a new task.</p>-->
-
+      class="mb-4"
+  ></TaskList>
+  <TaskList
+      v-bind:title="'Completed Tasks'"
+      v-bind:tasks="tasks"
+      v-model="tasks"
+      @snackbarEvents="handleSnackbarEvents"
+      class="mb-4"
+  ></TaskList>
 
 <!-- Snackbars - Adding -->
   <v-snackbar
