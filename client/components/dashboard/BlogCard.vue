@@ -1,9 +1,17 @@
 <script setup lang="ts">
 import { ClockHour4Icon, MessageCircle2Icon } from 'vue-tabler-icons';
-import {format, parseISO} from "date-fns";
-import {utcToZonedTime} from "date-fns-tz";
-const response = await fetch("https://api.quotable.io/random");
-const quote = await response.json();
+import { format, parseISO } from "date-fns";
+import { utcToZonedTime } from "date-fns-tz";
+import { useQuotesStore } from "~/store/quotes";
+
+interface Quote {
+  author: string,
+  content: string
+}
+
+const { getRandomQuote } = useQuotesStore();
+
+let quote: Quote = getRandomQuote;
 
 const date = ref(new Date().toISOString());
 
