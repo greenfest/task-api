@@ -1,67 +1,25 @@
 <script setup lang="ts">
-import type { Tasks, Task, TaskResponse } from '@/types/taskTypes';
-import {format, parseISO} from "date-fns";
-import {utcToZonedTime} from "date-fns-tz";
-const token = useCookie('token');
+import type { Task } from '@/types/taskTypes';
+import { format, parseISO } from "date-fns";
+import { utcToZonedTime } from "date-fns-tz";
+import { useTaskStore } from "~/store/tasks";
 
 
 const props = defineProps({
   title: String,
-  modelValue: Object as () => Ref<TaskResponse | undefined>,
+  tasks: Object || undefined,
 });
 
-const emits = defineEmits(["update:modelValue"]);
+const store = useTaskStore();
+const tasks = props.tasks;
 
-const tasks = ref(props.modelValue);
-console.log(tasks.value);
-
-
-if (tasks.value.completed.length !== 0) {
-  tasks.value.completed.forEach((task: { deadline: string | any[]; }) => task.deadline = task.deadline.slice(0, 19));
-}
-
-if (tasks.value.uncompleted.length !== 0) {
-  tasks.value.uncompleted.forEach((task: { deadline: string | any[]; }) => task.deadline = task.deadline.slice(0, 19));
-}
-// const uncompletedTasks: Ref<Task[]> = ref(tasks.value.uncompleted.length ? tasks.value.uncompleted : []);
-// const completedTasks: Ref<Task[]> = ref(tasks.value.completed.length ? tasks.value.completed : []);
-async function toggleTask(taskId: string, isCompleted: boolean) {
-  try {
-    const response = await fetch(`http://localhost:4000/tasks/${taskId}`, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": token ? "Bearer " + token.value : "",
-      },
-      body: JSON.stringify({
-        completed: !isCompleted,
-        dateCompleted: new Date,
-      }),
-    });
-
-    await response.json();
-    emits("update:modelValue", tasks);
-    // updateTaskStatusLocally(taskId, !isCompleted);
-  } catch (error) {
-    console.error('Error updating task status', error);
+if (tasks) {
+  if (tasks.completed.length !== 0) {
+    tasks.completed.forEach((task: { deadline: string | any[]; }) => task.deadline = task.deadline.slice(0, 19));
   }
-}
 
-function updateTaskStatusLocally(taskId: string, isCompleted: boolean) {
-  const taskToUpdate = uncompletedTasks.value.find((task: { _id: string; }) => task._id === taskId) ||
-      completedTasks.value.find((task: { _id: string; }) => task._id === taskId);
-
-  if (taskToUpdate) {
-    taskToUpdate.completed = isCompleted;
-
-    // Обновляем массивы в зависимости от статуса задачи
-    if (isCompleted) {
-      completedTasks.value.push(taskToUpdate);
-      uncompletedTasks.value = uncompletedTasks.value.filter((task: { _id: string; }) => task._id !== taskId);
-    } else {
-      uncompletedTasks.value.push(taskToUpdate);
-      completedTasks.value = completedTasks.value.filter((task: { _id: string; }) => task._id !== taskId);
-    }
+  if (tasks.uncompleted.length !== 0) {
+    tasks.uncompleted.forEach((task: { deadline: string | any[]; }) => task.deadline = task.deadline.slice(0, 19));
   }
 }
 
@@ -73,35 +31,6 @@ function formatDateTimeToLocal(dateTimeString: string) {
   return format(zonedDateTime, 'dd.MM.yyyy HH:mm');
 }
 
-
-
-async function deleteTask(taskId: string, completed: boolean) {
-  try {
-    const response = await fetch(`http://localhost:4000/tasks/${taskId}`, {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": token ? "Bearer " + token.value : "",
-      }
-    });
-    const json = await response.json();
-    if (!json.error) {
-      if (completed) {
-        completedTasks.value = completedTasks.value.filter((task: { _id: string; }) => task._id !== taskId);
-      } else {
-        uncompletedTasks.value = uncompletedTasks.value.filter((task: { _id: string; }) => task._id !== taskId);
-      }
-      snackbarTaskDeleted.value = true;
-    } else {
-      snackbarTaskDeletedError.value = true;
-    }
-  } catch(error) {
-    console.error('Error deleting the task', error);
-    snackbarTaskDeletedError.value = true;
-  }
-}
-
-
 let editedTask: Ref<Task> = ref({
   _id: '',
   title: '',
@@ -111,48 +40,15 @@ let editedTask: Ref<Task> = ref({
   completed: false,
   dateCompleted: '',
 });
-async function editTask(editedTask: Task) {
-  try {
-    const response = await fetch(`http://localhost:4000/tasks/${editedTask._id}`, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": token ? "Bearer " + token.value : "",
-      },
-      body: JSON.stringify( {...editedTask} ),
-    });
-    const json = await response.json();
-    if (!json.message) {
-      snackbarTaskEdited.value = true;
-      if (editedTask.completed) {
-        completedTasks.value = completedTasks.value.map( (task: { _id: string; }) => {
-          if (task._id === editedTask._id) {
-            return editedTask;
-          }
-          return task;
-        })
-      } else {
-        uncompletedTasks.value = uncompletedTasks.value.map( (task: { _id: string; }) => {
-          if (task._id === editedTask._id) {
-            return editedTask;
-          }
-          return task;
-        })
-      }
-    } else {
-      snackbarTaskEditingError.value = true;
-    }
-  } catch(error) {
-    console.error('Error Editing the task', error);
-    snackbarTaskEditingError.value = true;
-  }
-}
 
 const areArraysNotEmpty = () => {
-  return completedTasks.value.length || uncompletedTasks.value.length;
+  if (tasks) {
+    return tasks.completed.length || tasks.uncompleted.length;
+  } else {
+    return false;
+  }
+
 };
-
-
 
 </script>
 
@@ -161,12 +57,12 @@ const areArraysNotEmpty = () => {
     <v-list-subheader>{{ props.title }}</v-list-subheader>
 
     <v-list-item
-        v-for="task in props.title === 'Uncompleted Tasks' ? tasks.value?.uncompleted || [] : tasks.value?.completed || []"
+        v-for="task in props.title === 'Uncompleted Tasks' ? tasks.uncompleted || [] : tasks.completed || []"
         :key="task._id"
     >
       <template v-slot:prepend>
         <v-checkbox
-            @click="toggleTask(task._id, task.completed)"
+            @click="store.toggleTask(task._id, task.completed)"
             color="primary"
             hide-details
         ></v-checkbox>
@@ -263,7 +159,7 @@ const areArraysNotEmpty = () => {
                         type="datetime-local"
                     ></v-text-field>
 
-                    <v-btn type="submit" color="primary" :block="true" class="mt-2" @click="editTask(editedTask.value)">Edit</v-btn>
+                    <v-btn type="submit" color="primary" :block="true" class="mt-2" @click="store.editTask(editedTask.value)">Edit</v-btn>
                   </v-form>
                 </v-sheet>
               </v-card-text>
@@ -281,7 +177,7 @@ const areArraysNotEmpty = () => {
             color="grey-lighten-1"
             icon="mdi-delete"
             variant="text"
-            @click="deleteTask(task._id, task.completed)"
+            @click="store.deleteTask(task._id, task.completed)"
         ></v-btn>
       </template>
     </v-list-item>

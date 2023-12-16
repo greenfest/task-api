@@ -18,9 +18,3 @@ export type Task = {
     dateCompleted: string;
 }
 
-export type TaskResponse = {
-    uncompleted: Array<Task>;
-    completed: Array<Task>;
-}
-
-

@@ -1,31 +1,14 @@
 <script setup lang="ts">
 
-import type {TaskResponse} from '@/types/taskTypes';
 import TaskList from "~/components/tasks/taskList.vue";
-
-const token = useCookie('token');
-  const response = await fetch('http://localhost:4000/tasks', {
-    method: "GET",
-    headers: {
-      "Authorization": token ? "Bearer " + token.value : "",
-    },
-  });
-  const tasksObj = await response.json();
-  let tasks: Ref<TaskResponse> = ref(tasksObj);
-
-  async function fetchTasks() {
-    const response = await fetch('http://localhost:4000/tasks', {
-      method: "GET",
-      headers: {
-        "Authorization": token ? "Bearer " + token.value : "",
-      },
-    });
-    tasks.value = await response.json();
-  }
+import { useTaskStore } from '~/store/tasks';
+import {storeToRefs} from "pinia";
 
 
+  const { tasks } = storeToRefs(useTaskStore());
+  const store = useTaskStore();
 
-
+  await store.fetchTasks();
 
   let snackbarTaskAdded = ref(false);
   let snackbarTaskAddingError = ref(false);
@@ -34,30 +17,6 @@ const token = useCookie('token');
   let snackbarTaskEdited = ref(false);
   let snackbarTaskEditingError = ref(false);
 
-
-  async function createTask() {
-    try {
-      const taskObj = {...newTask.value};
-      taskObj.deadline = new Date(taskObj.deadline);
-      console.log(taskObj.date);
-      const response = await fetch(`http://localhost:4000/tasks/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": token ? "Bearer " + token.value : "",
-        },
-        body: JSON.stringify(taskObj),
-      });
-
-      const task = await response.json();
-      await fetchTasks();
-      snackbarTaskAdded.value = true;
-    } catch (error) {
-      console.error('Error creating a new task', error);
-      snackbarTaskAddingError.value = true;
-    }
-  }
-
   const newTask = ref({
     title: null,
     description: null,
@@ -65,22 +24,6 @@ const token = useCookie('token');
     deadline: new Date,
     completed: false,
   });
-
-  function handleSnackbarEvents(eventName: string) {
-    if(eventName === 'snackbarTaskAdded') {
-      snackbarTaskAdded.value = !snackbarTaskAdded.value;
-    } else if(eventName === 'snackbarTaskAddingError') {
-      snackbarTaskAddingError.value = !snackbarTaskAddingError.value;
-    } else if(eventName === 'snackbarTaskDeleted') {
-      snackbarTaskDeleted.value = !snackbarTaskDeleted.value;
-    } else if(eventName === 'snackbarTaskDeletedError') {
-      snackbarTaskDeletedError.value = !snackbarTaskDeletedError.value;
-    } else if(eventName === 'snackbarTaskEdited') {
-      snackbarTaskEdited.value = !snackbarTaskEdited.value;
-    } else if(eventName === 'snackbarTaskEditingError') {
-      snackbarTaskEditingError.value = !snackbarTaskEditingError.value;
-    }
-  }
 
 </script>
 
@@ -116,7 +59,7 @@ const token = useCookie('token');
                   type="datetime-local"
               ></v-text-field>
 
-              <v-btn type="submit" color="primary" :block="true" class="mt-2" @click="createTask">Submit</v-btn>
+              <v-btn type="submit" color="primary" :block="true" class="mt-2" @click="store.createTask(newTask)">Submit</v-btn>
 
             </v-form>
           </v-sheet>
@@ -134,15 +77,11 @@ const token = useCookie('token');
   <TaskList
       v-bind:title="'Uncompleted Tasks'"
       v-bind:tasks="tasks"
-      v-model="tasks"
-      @snackbarEvents="handleSnackbarEvents"
       class="mb-4"
   ></TaskList>
   <TaskList
       v-bind:title="'Completed Tasks'"
       v-bind:tasks="tasks"
-      v-model="tasks"
-      @snackbarEvents="handleSnackbarEvents"
       class="mb-4"
   ></TaskList>
 
@@ -251,7 +190,4 @@ const token = useCookie('token');
 </template>
 
 <style>
-.text-decoration-line-through {
-  text-decoration: line-through;
-}
 </style>
