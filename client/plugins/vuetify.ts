@@ -5,12 +5,12 @@ import * as directives from "vuetify/directives";
 import PerfectScrollbar from "vue3-perfect-scrollbar";
 import VueApexCharts from "vue3-apexcharts";
 import VueTablerIcons from "vue-tabler-icons";
-
 import "@/assets/scss/style.scss";
 
 import {
   BLUE_THEME,
 } from "@/theme/LightTheme";
+
 
 export default defineNuxtPlugin((nuxtApp) => {
   const vuetify = createVuetify({

@@ -1,11 +1,17 @@
 import { defineStore } from 'pinia';
 import type { Task } from '@/types/taskTypes';
+import { parseISO, formatISO } from "date-fns";
+import { utcToZonedTime, zonedTimeToUtc } from "date-fns-tz";
 
 export const useTaskStore = defineStore( 'tasks', {
     state: () => ({
         tasks: {
             uncompleted: [{}] as Task[],
             completed: [{}] as Task[],
+        },
+        snackbar: {
+            isActive: false,
+            text: '',
         }
     }),
     getters: {
@@ -22,12 +28,25 @@ export const useTaskStore = defineStore( 'tasks', {
             });
             const tasksObj = await response.json();
             if (tasksObj.completed.length !== 0) {
-                tasksObj.completed.forEach((task: { deadline: string | any[]; }) => task.deadline = task.deadline.slice(0, 19));
+                tasksObj.completed.forEach((task: { deadline: string }) => {
+                    const utcDateTime = parseISO(task.deadline);
+                    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                    let localDate = formatISO(utcToZonedTime(utcDateTime, timeZone));
+                    localDate = localDate.substring(0, localDate.length - 6)
+                    task.deadline = localDate;
+                });
             }
 
             if (tasksObj.uncompleted.length !== 0) {
-                tasksObj.uncompleted.forEach((task: { deadline: string | any[]; }) => task.deadline = task.deadline.slice(0, 19));
+                tasksObj.uncompleted.forEach((task: { deadline: string }) => {
+                    const utcDateTime = parseISO(task.deadline);
+                    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                    let localDate = formatISO(utcToZonedTime(utcDateTime, timeZone));
+                    localDate = localDate.substring(0, localDate.length - 6)
+                    task.deadline = localDate;
+                });
             }
+
             this.tasks.uncompleted = tasksObj.uncompleted;
             this.tasks.completed = tasksObj.completed;
         },
@@ -35,7 +54,10 @@ export const useTaskStore = defineStore( 'tasks', {
             try {
                 const token = useCookie('token');
                 const taskObj = {...newTask};
-                taskObj.deadline = new Date(taskObj.deadline);
+                const localTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                const utcDate = zonedTimeToUtc(taskObj.deadline, localTimeZone);
+                taskObj.deadline = formatISO(utcDate);
+
                 const response = await fetch(`http://localhost:4000/tasks/`, {
                     method: "POST",
                     headers: {
@@ -44,16 +66,15 @@ export const useTaskStore = defineStore( 'tasks', {
                     },
                     body: JSON.stringify(taskObj),
                 });
+                await response.json();
 
-                const task = await response.json();
-                console.log(task);
                 await this.fetchTasks();
-                // snackbarTaskAdded.value = true;
-                return 'Success';
+                this.snackbar.isActive = true;
+                this.snackbar.text = 'A new task was added';
             } catch (error) {
                 console.error('Error creating a new task', error);
-                // snackbarTaskAddingError.value = true;
-                throw new Error(`Error creating a new task`);
+                this.snackbar.isActive = true;
+                this.snackbar.text = 'A new task was not added. Please try again later.';
             }
         },
         async toggleTask(taskId: string, isCompleted: boolean) {
@@ -105,6 +126,8 @@ export const useTaskStore = defineStore( 'tasks', {
                 const json = await response.json();
                 if (!json.message) {
                     // snackbarTaskEdited.value = true;
+                    this.snackbar.isActive = true;
+                    this.snackbar.text = 'The task was edited successfully';
                     if (editedTask.completed) {
                         this.tasks.completed = this.tasks.completed.map( task => {
                             if (task._id === editedTask._id) {
@@ -122,10 +145,14 @@ export const useTaskStore = defineStore( 'tasks', {
                     }
                 } else {
                     // snackbarTaskEditingError.value = true;
+                    this.snackbar.isActive = true;
+                    this.snackbar.text = 'The task was not edited. Please try again later.';
                 }
             } catch(error) {
                 console.error('Error Editing the task', error);
                 // snackbarTaskEditingError.value = true;
+                this.snackbar.isActive = true;
+                this.snackbar.text = 'The task was not edited. Please try again later.';
             }
         },
         async deleteTask(taskId: string, isCompleted: boolean) {
@@ -147,12 +174,18 @@ export const useTaskStore = defineStore( 'tasks', {
                     }
                     await this.fetchTasks();
                     // snackbarTaskDeleted.value = true;
+                    this.snackbar.isActive = true;
+                    this.snackbar.text = 'The task was deleted.';
                 } else {
                     // snackbarTaskDeletedError.value = true;
+                    this.snackbar.isActive = true;
+                    this.snackbar.text = 'The task was not deleted. Please try again later.';
                 }
             } catch(error) {
                 console.error('Error deleting the task', error);
                 // snackbarTaskDeletedError.value = true;
+                this.snackbar.isActive = true;
+                this.snackbar.text = 'The task was not deleted. Please try again later.';
             }
         }
     }

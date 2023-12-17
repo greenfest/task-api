@@ -13,15 +13,15 @@ const props = defineProps({
 const store = useTaskStore();
 const tasks = props.tasks;
 
-if (tasks) {
-  if (tasks.completed.length !== 0) {
-    tasks.completed.forEach((task: { deadline: string | any[]; }) => task.deadline = task.deadline.slice(0, 19));
-  }
-
-  if (tasks.uncompleted.length !== 0) {
-    tasks.uncompleted.forEach((task: { deadline: string | any[]; }) => task.deadline = task.deadline.slice(0, 19));
-  }
-}
+// if (tasks) {
+//   if (tasks.completed.length !== 0) {
+//     tasks.completed.forEach((task: { deadline: string | any[]; }) => task.deadline = task.deadline.slice(0, 19));
+//   }
+//
+//   if (tasks.uncompleted.length !== 0) {
+//     tasks.uncompleted.forEach((task: { deadline: string | any[]; }) => task.deadline = task.deadline.slice(0, 19));
+//   }
+// }
 
 function formatDateTimeToLocal(dateTimeString: string) {
   const utcDateTime = parseISO(dateTimeString);
@@ -41,23 +41,27 @@ let editedTask: Ref<Task> = ref({
   dateCompleted: '',
 });
 
-const areArraysNotEmpty = () => {
+const isArrayNotEmpty = () => {
+  const isCompleted = props.title === "Completed Tasks";
   if (tasks) {
-    return tasks.completed.length || tasks.uncompleted.length;
+    if (isCompleted) {
+      return tasks.completed.length;
+    } else {
+      return tasks.uncompleted.length;
+    }
   } else {
     return false;
   }
-
 };
 
 </script>
 
 <template>
-  <v-list class="rounded" v-if="areArraysNotEmpty">
+  <v-list class="rounded">
     <v-list-subheader>{{ props.title }}</v-list-subheader>
-
     <v-list-item
         v-for="task in props.title === 'Uncompleted Tasks' ? tasks.uncompleted || [] : tasks.completed || []"
+        v-if="isArrayNotEmpty()"
         :key="task._id"
     >
       <template v-slot:prepend>
@@ -181,6 +185,7 @@ const areArraysNotEmpty = () => {
         ></v-btn>
       </template>
     </v-list-item>
+    <v-list-item subtitle="There are no tasks here yet" v-else> </v-list-item>
   </v-list>
 </template>
 

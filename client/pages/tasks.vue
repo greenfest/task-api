@@ -10,20 +10,21 @@ import {storeToRefs} from "pinia";
 
   await store.fetchTasks();
 
-  let snackbarTaskAdded = ref(false);
-  let snackbarTaskAddingError = ref(false);
-  let snackbarTaskDeleted = ref(false);
-  let snackbarTaskDeletedError = ref(false);
-  let snackbarTaskEdited = ref(false);
-  let snackbarTaskEditingError = ref(false);
-
   const newTask = ref({
     title: null,
     description: null,
-    date: new Date,
-    deadline: new Date,
+    date: String,
+    deadline: String,
     completed: false,
   });
+
+const areArraysNotEmpty = () => {
+  if (store.tasks) {
+    return store.tasks.completed.length || store.tasks.uncompleted.length;
+  } else {
+    return false;
+  }
+};
 
 </script>
 
@@ -45,14 +46,18 @@ import {storeToRefs} from "pinia";
         <v-card-text>
           <v-sheet width="300" class="mx-auto">
             <v-form fast-fail @submit.prevent>
-              <v-text-field
+              <v-textarea
                   v-model="newTask.title"
                   label="Title"
-              ></v-text-field>
-              <v-text-field
+                  rows="1"
+                  variant="outlined"
+              ></v-textarea>
+              <v-textarea
                   v-model="newTask.description"
                   label="Description"
-              ></v-text-field>
+                  rows="1"
+                  variant="outlined"
+              ></v-textarea>
               <v-text-field
                   v-model="newTask.deadline"
                   label="Deadline"
@@ -73,114 +78,33 @@ import {storeToRefs} from "pinia";
       </v-card>
     </template>
   </v-dialog>
+  <div v-if="areArraysNotEmpty">
+    <TaskList
+        v-bind:title="'Uncompleted Tasks'"
+        v-bind:tasks="tasks"
+        class="mb-4"
+    ></TaskList>
+    <TaskList
+        v-bind:title="'Completed Tasks'"
+        v-bind:tasks="tasks"
+        class="mb-4"
+    ></TaskList>
+  </div>
+  <p v-else>There are no tasks here yet. You can create a new task</p>
 
-  <TaskList
-      v-bind:title="'Uncompleted Tasks'"
-      v-bind:tasks="tasks"
-      class="mb-4"
-  ></TaskList>
-  <TaskList
-      v-bind:title="'Completed Tasks'"
-      v-bind:tasks="tasks"
-      class="mb-4"
-  ></TaskList>
 
-<!-- Snackbars - Adding -->
+<!-- Snackbar -->
   <v-snackbar
-      v-model="snackbarTaskAdded"
-      :timeout="3000"
+      v-model="store.snackbar.isActive"
+      :timeout="2000"
   >
-    A new task was added
+    {{ store.snackbar.text }}
 
     <template v-slot:actions>
       <v-btn
           color="blue"
           variant="text"
-          @click="snackbarTaskAdded = false"
-      >
-        Close
-      </v-btn>
-    </template>
-  </v-snackbar>
-  <v-snackbar
-      v-model="snackbarTaskAddingError"
-      :timeout="3000"
-  >
-    A new task was not added. Please try again later.
-
-    <template v-slot:actions>
-      <v-btn
-          color="blue"
-          variant="text"
-          @click="snackbarTaskAddingError = false"
-      >
-        Close
-      </v-btn>
-    </template>
-  </v-snackbar>
-
-<!--  Snackbars - Editing -->
-  <v-snackbar
-      v-model="snackbarTaskEdited"
-      :timeout="3000"
-  >
-    The task was edited successfully
-
-    <template v-slot:actions>
-      <v-btn
-          color="blue"
-          variant="text"
-          @click="snackbarTaskEdited = false"
-      >
-        Close
-      </v-btn>
-    </template>
-  </v-snackbar>
-  <v-snackbar
-      v-model="snackbarTaskEditingError"
-      :timeout="3000"
-  >
-    The task was not edited. Please try again later.
-
-    <template v-slot:actions>
-      <v-btn
-          color="blue"
-          variant="text"
-          @click="snackbarTaskEditingError = false"
-      >
-        Close
-      </v-btn>
-    </template>
-  </v-snackbar>
-
-<!-- Snackbars - Deleting -->
-  <v-snackbar
-      v-model="snackbarTaskDeleted"
-      :timeout="3000"
-  >
-    The task was deleted.
-
-    <template v-slot:actions>
-      <v-btn
-          color="blue"
-          variant="text"
-          @click="snackbarTaskDeleted = false"
-      >
-        Close
-      </v-btn>
-    </template>
-  </v-snackbar>
-  <v-snackbar
-      v-model="snackbarTaskDeletedError"
-      :timeout="3000"
-  >
-    The task was not deleted. Please try again later.
-
-    <template v-slot:actions>
-      <v-btn
-          color="blue"
-          variant="text"
-          @click="snackbarTaskDeletedError = false"
+          @click="store.snackbar.isActive = false"
       >
         Close
       </v-btn>
