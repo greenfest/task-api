@@ -4,19 +4,22 @@ import TaskList from "~/components/tasks/taskList.vue";
 import { useTaskStore } from '~/store/tasks';
 import {storeToRefs} from "pinia";
 
+definePageMeta({
+  middleware: "auth",
+});
 
-  const { tasks } = storeToRefs(useTaskStore());
-  const store = useTaskStore();
+const { tasks } = storeToRefs(useTaskStore());
+const store = useTaskStore();
 
-  await store.fetchTasks();
+await store.fetchTasks();
 
-  const newTask = ref({
-    title: null,
-    description: null,
-    date: String,
-    deadline: String,
-    completed: false,
-  });
+const newTask = ref({
+  title: null,
+  description: null,
+  date: String,
+  deadline: String,
+  completed: false,
+});
 
 const areArraysNotEmpty = () => {
   if (store.tasks) {

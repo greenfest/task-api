@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import type { Task } from '@/types/taskTypes';
-import { format, parseISO } from "date-fns";
+import { format } from "date-fns";
 import { utcToZonedTime } from "date-fns-tz";
 import { useTaskStore } from "~/store/tasks";
-
 
 const props = defineProps({
   title: String,
@@ -13,21 +12,9 @@ const props = defineProps({
 const store = useTaskStore();
 const tasks = props.tasks;
 
-// if (tasks) {
-//   if (tasks.completed.length !== 0) {
-//     tasks.completed.forEach((task: { deadline: string | any[]; }) => task.deadline = task.deadline.slice(0, 19));
-//   }
-//
-//   if (tasks.uncompleted.length !== 0) {
-//     tasks.uncompleted.forEach((task: { deadline: string | any[]; }) => task.deadline = task.deadline.slice(0, 19));
-//   }
-// }
-
 function formatDateTimeToLocal(dateTimeString: string) {
-  const utcDateTime = parseISO(dateTimeString);
   const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  const zonedDateTime = utcToZonedTime(utcDateTime, timeZone);
-
+  const zonedDateTime = utcToZonedTime(dateTimeString, timeZone);
   return format(zonedDateTime, 'dd.MM.yyyy HH:mm');
 }
 

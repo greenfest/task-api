@@ -6,7 +6,7 @@ const userprofile = ref([
   {
     title: "My Profile",
     desc: "Account Settings",
-    path: "/dashboard",
+    path: "/profile",
   },
   {
     title: "My Tasks",
