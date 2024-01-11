@@ -68,6 +68,21 @@ router.post('/', auth.optional, async (req, res, next) => {
         .then(() => res.json({ user: finalUser.toAuthJSON() }));
 });
 
+router.patch("/", auth.required, async (req, res) => {
+    const query = { _id: req.auth.id ? req.auth.id : "" };
+    const updates = {
+        email: req.body.email
+    };
+
+    try {
+        await Users.updateOne(query, updates);
+        const updatedUser = await Users.findById(req.auth.id);
+        res.status(200).json({ message: `User was successfully updated. New Email: ${updatedUser.email}` });
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+});
+
 //POST login route (optional, everyone has access)
 router.post('/login', auth.optional, (req, res, next) => {
     const { body: { user } } = req;
