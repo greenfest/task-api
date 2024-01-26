@@ -1,8 +1,14 @@
 <script setup lang="ts">
 
+import {storeToRefs} from "pinia";
+import {useProfileStore} from "~/store/profile";
+
 definePageMeta({
   middleware: "auth",
 });
+
+const profileStore  = useProfileStore();
+await profileStore.fetchProfile();
 
 </script>
 
@@ -17,16 +23,10 @@ definePageMeta({
     </div>
 
     <v-list-item class="ml-3">
-      <v-list-item-title>{{ `Email: ` }}</v-list-item-title>
+      <v-list-item-title>{{ `Email: ${profileStore.getEmail}` }}</v-list-item-title>
     </v-list-item>
     <v-list-item class="ml-3">
-      <v-list-item-title>{{ `Password: ` }}</v-list-item-title>
-    </v-list-item>
-    <v-list-item class="ml-3">
-      <v-list-item-title>{{ `Email: ` }}</v-list-item-title>
-    </v-list-item>
-    <v-list-item class="ml-3">
-      <v-list-item-title>{{ `Email: ` }}</v-list-item-title>
+      <v-list-item-title>{{ `Password: ******` }}</v-list-item-title>
     </v-list-item>
 
   </v-list>

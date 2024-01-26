@@ -118,6 +118,20 @@ router.post('/login', auth.optional, (req, res, next) => {
     })(req, res, next);
 });
 
+router.get('/profile', auth.required, async (req, res, next) => {
+    const query = { _id: req.auth.id ? req.auth.id : "" };
+    try {
+        const user = await Users.findById(req.auth.id);
+        res.status(200).json({
+            "email": user.email,
+            "avatar": user.avatar
+        });
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+
+});
+
 //GET Test (required, only authenticated users have access)
 router.get('/test', auth.required, (req, res, next) => {
     return res.json({message: "Welcome"})
