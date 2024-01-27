@@ -21,12 +21,28 @@ export const useProfileStore = defineStore('profile', {
             const response = await fetch('http://localhost:4000/users', {
                 method: "PATCH",
                 headers: {
+                    "Content-Type": "application/json",
                     "Authorization": token ? "Bearer " + token.value : "",
                 },
                 body: JSON.stringify({ email: newEmail }),
             });
             const status = await response.json();
             this.profile.email = status.email;
+            if (status.error){
+                throw new Error(status.message)
+            }
+        },
+        async editPassword(newPassword: string){
+            const token = useCookie('token');
+            const response = await fetch('http://localhost:4000/users', {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": token ? "Bearer " + token.value : "",
+                },
+                body: JSON.stringify({ password: newPassword }),
+            });
+            const status = await response.json();
             if (status.error){
                 throw new Error(status.message)
             }

@@ -1,14 +1,37 @@
 <script setup lang="ts">
 
-import {storeToRefs} from "pinia";
 import {useProfileStore} from "~/store/profile";
 
 definePageMeta({
   middleware: "auth",
 });
 
+const newProfileData = ref({
+  email: "",
+  avatar: "",
+  password: "",
+});
+
+const inputStates = ref({
+  email: false,
+  password: false,
+});
+
 const profileStore  = useProfileStore();
 await profileStore.fetchProfile();
+
+newProfileData.value.email = profileStore.getEmail;
+newProfileData.value.avatar = profileStore.getAvatar;
+
+const editEmail = () => {
+  profileStore.editEmail(newProfileData.value.email);
+  inputStates.value.email = !inputStates.value.email;
+}
+
+const editPassword = () => {
+  profileStore.editPassword(newProfileData.value.password);
+  inputStates.value.password = !inputStates.value.password;
+}
 
 </script>
 
@@ -23,10 +46,34 @@ await profileStore.fetchProfile();
     </div>
 
     <v-list-item class="ml-3">
-      <v-list-item-title>{{ `Email: ${profileStore.getEmail}` }}</v-list-item-title>
+      <v-list-item-title>
+        {{ `Email:` }}
+      </v-list-item-title>
+      <v-text-field
+          placeholder="Email address"
+          prepend-inner-icon="mdi-email-outline"
+          v-model="newProfileData.email"
+          :disabled="!inputStates.email"
+      ></v-text-field>
+      <template v-slot:append>
+        <v-icon v-if="!inputStates.email" class="email-input mr-2" icon="mdi-pencil" @click="inputStates.email = !inputStates.email"></v-icon>
+        <v-icon v-else class="mr-2" icon="mdi-check" @click="editEmail()"></v-icon>
+      </template>
     </v-list-item>
+
     <v-list-item class="ml-3">
-      <v-list-item-title>{{ `Password: ******` }}</v-list-item-title>
+      <v-list-item-title>{{ `Password:` }}</v-list-item-title>
+      <v-text-field
+          placeholder="******"
+          prepend-inner-icon="mdi-email-outline"
+          v-model="newProfileData.password"
+          type="password"
+          :disabled="!inputStates.password"
+      ></v-text-field>
+      <template v-slot:append>
+        <v-icon v-if="!inputStates.password" class="password-input mr-2" icon="mdi-pencil" @click="inputStates.password = !inputStates.password"></v-icon>
+        <v-icon v-else class="mr-2" icon="mdi-check" @click="editPassword()"></v-icon>
+      </template>
     </v-list-item>
 
   </v-list>

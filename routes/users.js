@@ -69,18 +69,53 @@ router.post('/', auth.optional, async (req, res, next) => {
 });
 
 router.patch("/", auth.required, async (req, res) => {
+    console.log(req.body.password);
     const query = { _id: req.auth.id ? req.auth.id : "" };
-    const updates = {
-        email: req.body.email
-    };
+    if (req.body.password) {
+        const updates = {
+            password: req.body.password
+        };
 
-    try {
-        await Users.updateOne(query, updates);
-        const updatedUser = await Users.findById(req.auth.id);
-        res.status(200).json({ message: `User was successfully updated. New Email: ${updatedUser.email}` });
-    } catch (error) {
-        res.status(400).json({ message: error.message });
+        try {
+            // const updatedUser = await Users.findById(req.auth.id);
+            // updatedUser.setPassword(user.password);
+            // return updatedUser.save()
+            //     .then(() => res.json({ message: `User's password was successfully updated. }` }));
+
+            await Users.findById(req.auth._id, (err, user)=> {
+                if (err) {
+                    console.log(err);
+                } else {
+                    console.log(user);
+                    user.setPassword(req.body.password,(err, user)=>{
+                        if (err) {
+                            console.log('set pass error'+err);
+                        } else {
+                            user.save();
+                            console.log('new pass set successfully!!');
+                            res.status(200).json({ message: `User password was successfully updated`});
+                        }
+                    });
+                }
+            });
+
+        } catch (error) {
+            res.status(400).json({ message: error.message });
+        }
+    } else {
+        const updates = {
+            email: req.body.email
+        };
+
+        try {
+            await Users.updateOne(query, updates);
+            const updatedUser = await Users.findById(req.auth.id);
+            res.status(200).json({ message: `User was successfully updated. New Email: ${updatedUser.email}` });
+        } catch (error) {
+            res.status(400).json({ message: error.message });
+        }
     }
+
 });
 
 //POST login route (optional, everyone has access)
