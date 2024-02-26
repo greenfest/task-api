@@ -3,7 +3,7 @@
 
 ![Screenshot](Screenshot-UTask.png)
 
-## Стэк технологий
+## Стек технологий
 * Node.js
 * Express.js
 * MongoDB
@@ -17,5 +17,5 @@
 ```git clone https://github.com/greenfest/task-api.git```
 2. Установка зависимостей:
 ```yarn install```
-2. Запуск приложения из корневой папки (запускаются серверная и клиентская часть, с использованием concurrently):
+3. Запуск приложения из корневой папки (запускаются серверная и клиентская часть, с использованием concurrently):
 ```yarn run dev```
